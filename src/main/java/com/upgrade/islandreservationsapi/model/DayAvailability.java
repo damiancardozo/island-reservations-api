@@ -15,20 +15,14 @@ public class DayAvailability {
     @NotNull
     private LocalDate date;
     private int availability;
+    private int maxAvailability;
 
     public DayAvailability() {}
 
-    public DayAvailability(LocalDate date, int availability) {
+    public DayAvailability(LocalDate date, int availability, int maxAvailability) {
         this.date = date;
         this.availability = availability;
-    }
-
-    @Override
-    public String toString() {
-        return "DayAvailability{" +
-                "date=" + date +
-                ", availability=" + availability +
-                '}';
+        this.maxAvailability = maxAvailability;
     }
 
     @Override
@@ -36,13 +30,29 @@ public class DayAvailability {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DayAvailability that = (DayAvailability) o;
-        return availability == that.availability &&
-                Objects.equals(date, that.date);
+        return Objects.equals(date, that.date);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(date, availability);
+        return Objects.hash(date);
+    }
+
+    @Override
+    public String toString() {
+        return "DayAvailability{" +
+                "date=" + date +
+                ", availability=" + availability +
+                ", maxAvailability=" + maxAvailability +
+                '}';
+    }
+
+    public int getMaxAvailability() {
+        return maxAvailability;
+    }
+
+    public void setMaxAvailability(int maxAvailability) {
+        this.maxAvailability = maxAvailability;
     }
 
     public LocalDate getDate() {

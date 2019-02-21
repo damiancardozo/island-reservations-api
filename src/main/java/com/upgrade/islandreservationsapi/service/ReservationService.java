@@ -1,18 +1,20 @@
 package com.upgrade.islandreservationsapi.service;
 
-import com.upgrade.islandreservationsapi.exception.NoAvailabilityForDateException;
-import com.upgrade.islandreservationsapi.exception.ReservationAlreadyCancelledException;
-import com.upgrade.islandreservationsapi.exception.ReservationNotFoundException;
+import com.upgrade.islandreservationsapi.exception.*;
 import com.upgrade.islandreservationsapi.model.Reservation;
+import org.springframework.stereotype.Service;
 
+@Service
 public interface ReservationService {
 
     Reservation getReservation(Integer id) throws ReservationNotFoundException;
 
-    Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException;
+    Reservation createReservation(Reservation reservation)
+            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException;
 
-    Reservation updateReservation(Reservation reservation) throws NoAvailabilityForDateException;
+    Reservation updateReservation(Reservation reservation)
+            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException, ReservationNotFoundException;
 
     Reservation cancelReservation(Integer id)
-            throws ReservationNotFoundException, ReservationAlreadyCancelledException;
+            throws ReservationNotFoundException, ReservationAlreadyCancelledException, NoAvailabilityForDateException, DayAvailabilityNotFoundException;
 }

@@ -1,16 +1,17 @@
 package com.upgrade.islandreservationsapi.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
 @Table(name = "reservation")
+@ReservationDates(startDateField = "start", endDateField = "end")
 public class Reservation {
 
     public enum Status {ACTIVE, CANCELLED}
@@ -19,21 +20,26 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     @NotNull
+    @NotEmpty
     private String fistName;
     @NotNull
+    @NotEmpty
     private String lastName;
     @NotNull
     @Email
     private String email;
     @NotNull
+    @Future
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate start;
     @NotNull
+    @Future
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate end;
     @NotNull
+    @Positive
     private Integer numberOfPersons;
 
     @Enumerated(EnumType.STRING)
