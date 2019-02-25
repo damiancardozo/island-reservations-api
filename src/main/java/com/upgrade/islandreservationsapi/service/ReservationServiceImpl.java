@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -30,61 +31,42 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException, DayAvailabilityNotFoundException {
+    public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
 
-        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
-        updateAvailability(dates, reservation, true);
-
+        updateAvailability(reservation);
         return reservationRepository.save(reservation);
     }
 
     @Override
     public Reservation updateReservation(Reservation reservation)
-            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException, ReservationNotFoundException {
+            throws NoAvailabilityForDateException, ReservationNotFoundException {
 
         Reservation oldReservation = reservationRepository.findById(reservation.getId()).orElseThrow(ReservationNotFoundException::new);
+        reservationRepository.save(reservation);
 
-        if(oldReservation.getStart().isAfter(reservation.getStart())) {
-            LocalDate deleteFromDate;
-            LocalDate addToDate;
-            if(reservation.getEnd().isAfter(oldReservation.getStart())) {
-                addToDate = oldReservation.getStart();
-                deleteFromDate = reservation.getEnd().plusDays(1);
-            } else {
-                addToDate = reservation.getEnd();
-                deleteFromDate = oldReservation.getStart(); // maybe have to add 1 if oldreservation.start = reservation.end they are the same
-            }
-            List<LocalDate> addDates = reservation.getStart().datesUntil(addToDate).collect(Collectors.toList());
-            updateAvailability(addDates, reservation, true);
+        boolean datesChanged = !oldReservation.getStart().equals(reservation.getStart())
+                || !oldReservation.getEnd().equals(reservation.getEnd());
+        boolean numberChanged = !oldReservation.getNumberOfPersons().equals(reservation.getNumberOfPersons());
 
-            List<LocalDate> removeDates = deleteFromDate.datesUntil(oldReservation.getEnd()).collect(Collectors.toList());
-            updateAvailability(removeDates, oldReservation, false);
-        } else if(reservation.getStart().isAfter(oldReservation.getStart())) {
-            LocalDate toDate;
-            if(oldReservation.getEnd().isAfter(reservation.getStart())) {
-                toDate = reservation.getStart();
-            } else {
-                toDate = oldReservation.getEnd();
-            }
-            List<LocalDate> removeDates = oldReservation.getStart().datesUntil(toDate).collect(Collectors.toList());
-            updateAvailability(removeDates, oldReservation, false);
-
-            LocalDate fromDate;
-            if(oldReservation.getEnd().isAfter(reservation.getStart())) {
-                fromDate = oldReservation.getEnd().plusDays(1);
-            } else {
-                fromDate = reservation.getStart();
-            }
-            List<LocalDate> addDates = fromDate.datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
-            updateAvailability(addDates, reservation, true);
+        if(!datesChanged && !numberChanged) {
+            return reservation;
         }
-
-        return reservationRepository.save(reservation);
+        List<LocalDate> oldDates = oldReservation.getStart().datesUntil(oldReservation.getEnd().plusDays(1)).collect(Collectors.toList());
+        List<DayAvailability> availabilities = availabilityRepository.findAllById(oldDates);
+        if(!datesChanged) {
+            availabilities.forEach(a -> a.setAvailability(oldReservation.getNumberOfPersons() - reservation.getNumberOfPersons()));
+            availabilityRepository.saveAll(availabilities);
+        } else {
+            availabilities.forEach(a -> a.setAvailability(a.getAvailability() + oldReservation.getNumberOfPersons()));
+            availabilityRepository.saveAll(availabilities);
+            updateAvailability(reservation);
+        }
+        return reservation;
     }
 
     @Override
     public Reservation cancelReservation(Integer id)
-            throws ReservationNotFoundException, ReservationAlreadyCancelledException, NoAvailabilityForDateException, DayAvailabilityNotFoundException {
+            throws ReservationNotFoundException, ReservationAlreadyCancelledException {
         Optional<Reservation> reservationOpt = reservationRepository.findById(id);
         Reservation reservation = reservationOpt.orElseThrow(ReservationNotFoundException::new);
         if(reservation.getStatus() == Reservation.Status.CANCELLED) {
@@ -94,28 +76,34 @@ public class ReservationServiceImpl implements ReservationService {
         reservation = reservationRepository.save(reservation);
 
         // update availability
-        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
-        updateAvailability(dates, reservation, false);
+
+        List<LocalDate> oldDates = reservation.getStart().datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
+        List<DayAvailability> availabilities = availabilityRepository.findAllById(oldDates);
+        for(DayAvailability availability: availabilities) {
+            availability.setAvailability(availability.getAvailability() + reservation.getNumberOfPersons());
+        }
+        availabilityRepository.saveAll(availabilities);
 
         return reservation;
     }
 
-    private void updateAvailability(List<LocalDate> dates, Reservation reservation, boolean add)
-            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException {
+    private void updateAvailability(Reservation reservation)
+            throws NoAvailabilityForDateException {
+        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
+        List<DayAvailability> availabilities = availabilityRepository.findAllById(dates);
+        Map<LocalDate, DayAvailability> availabilityMap = availabilities.stream()
+                .collect(Collectors.toMap(DayAvailability::getDate, v -> v));
         for(LocalDate date: dates) {
-            Optional<DayAvailability> availabilityOpt = availabilityRepository.findById(date);
+            Optional<DayAvailability> availabilityOpt = Optional.ofNullable(availabilityMap.get(date));
             int maxOccupancy = configurationService.getMaxAvailability();
-            DayAvailability dayAvailability = add ? availabilityOpt.orElse(new DayAvailability(date, maxOccupancy, maxOccupancy))
-                    : availabilityOpt.orElseThrow(DayAvailabilityNotFoundException::new);
-            if(add) {
-                dayAvailability.setAvailability(dayAvailability.getAvailability() - reservation.getNumberOfPersons());
-            } else {
-                dayAvailability.setAvailability(dayAvailability.getAvailability() + reservation.getNumberOfPersons());
-            }
+            DayAvailability dayAvailability = availabilityOpt.orElse(new DayAvailability(date, maxOccupancy, maxOccupancy));
+            dayAvailability.setAvailability(dayAvailability.getAvailability() - reservation.getNumberOfPersons());
             if(dayAvailability.getAvailability() < 0) {
                 throw new NoAvailabilityForDateException();
             }
-            availabilityRepository.save(dayAvailability);
+            availabilities.add(dayAvailability);
         }
+        availabilityRepository.saveAll(availabilities);
     }
+
 }

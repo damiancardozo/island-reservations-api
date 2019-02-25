@@ -10,11 +10,11 @@ public interface ReservationService {
     Reservation getReservation(Integer id) throws ReservationNotFoundException;
 
     Reservation createReservation(Reservation reservation)
-            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException;
+            throws NoAvailabilityForDateException;
 
     Reservation updateReservation(Reservation reservation)
-            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException, ReservationNotFoundException;
+            throws NoAvailabilityForDateException, ReservationNotFoundException;
 
     Reservation cancelReservation(Integer id)
-            throws ReservationNotFoundException, ReservationAlreadyCancelledException, NoAvailabilityForDateException, DayAvailabilityNotFoundException;
+            throws ReservationNotFoundException, ReservationAlreadyCancelledException;
 }

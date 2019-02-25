@@ -24,7 +24,7 @@ public class ReservationController {
     @PostMapping
     @ResponseBody
     public ReservationCreated createReservation(@Valid @RequestBody Reservation reservation)
-            throws NoAvailabilityForDateException, DayAvailabilityNotFoundException {
+            throws NoAvailabilityForDateException {
         Reservation newReservation = service.createReservation(reservation);
         return new ReservationCreated(newReservation.getId());
     }
@@ -32,8 +32,7 @@ public class ReservationController {
     @PutMapping("/{id}")
     @ResponseBody
     public Reservation updateReservation(@PathVariable Integer id, @Valid @RequestBody Reservation reservation)
-            throws NoAvailabilityForDateException, IdsNotMatchingException, DayAvailabilityNotFoundException,
-            ReservationNotFoundException {
+            throws NoAvailabilityForDateException, IdsNotMatchingException, ReservationNotFoundException {
         if(reservation.getId() != null && !reservation.getId().equals(id)) {
             throw new IdsNotMatchingException();
         } else if(reservation.getId() == null) {
@@ -45,8 +44,7 @@ public class ReservationController {
     @DeleteMapping("/{id}")
     @ResponseBody
     public Reservation cancelReservation(@PathVariable Integer id)
-            throws ReservationNotFoundException, ReservationAlreadyCancelledException,
-            NoAvailabilityForDateException, DayAvailabilityNotFoundException {
+            throws ReservationNotFoundException, ReservationAlreadyCancelledException {
         return service.cancelReservation(id);
     }
 }
