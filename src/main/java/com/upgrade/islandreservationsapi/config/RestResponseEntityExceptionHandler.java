@@ -38,9 +38,27 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     }
 
     @ExceptionHandler(value
-            = { ReservationAlreadyCancelledException.class, NoAvailabilityForDateException.class, IdsNotMatchingException.class})
+            = { ReservationAlreadyCancelledException.class})
     protected ResponseEntity<Object> handleAlreadyCancelled(
             ReservationAlreadyCancelledException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), (List<String>) null);
+        return handleExceptionInternal(ex, error,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(value
+            = { NoAvailabilityForDateException.class})
+    protected ResponseEntity<Object> handleNoAvailability(
+            NoAvailabilityForDateException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), (List<String>) null);
+        return handleExceptionInternal(ex, error,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(value
+            = { IdsNotMatchingException.class})
+    protected ResponseEntity<Object> handleIdsNotMatching(
+            IdsNotMatchingException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), (List<String>) null);
         return handleExceptionInternal(ex, error,
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);

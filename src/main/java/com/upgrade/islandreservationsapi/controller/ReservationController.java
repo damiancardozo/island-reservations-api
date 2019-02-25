@@ -9,19 +9,19 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
-@RestController("/reservations")
+@RestController
 public class ReservationController {
 
     @Autowired
     private ReservationService service;
 
-    @GetMapping("/{id}")
+    @GetMapping("reservations/{id}")
     @ResponseBody
     public Reservation getReservation(@PathVariable Integer id) throws ReservationNotFoundException {
         return service.getReservation(id);
     }
 
-    @PostMapping
+    @PostMapping("reservations")
     @ResponseBody
     public ReservationCreated createReservation(@Valid @RequestBody Reservation reservation)
             throws NoAvailabilityForDateException {
@@ -29,7 +29,7 @@ public class ReservationController {
         return new ReservationCreated(newReservation.getId());
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("reservations/{id}")
     @ResponseBody
     public Reservation updateReservation(@PathVariable Integer id, @Valid @RequestBody Reservation reservation)
             throws NoAvailabilityForDateException, IdsNotMatchingException, ReservationNotFoundException {
@@ -41,7 +41,7 @@ public class ReservationController {
         return service.updateReservation(reservation);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("reservations/{id}")
     @ResponseBody
     public Reservation cancelReservation(@PathVariable Integer id)
             throws ReservationNotFoundException, ReservationAlreadyCancelledException {

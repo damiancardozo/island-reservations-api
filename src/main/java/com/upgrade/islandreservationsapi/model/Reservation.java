@@ -1,6 +1,8 @@
 package com.upgrade.islandreservationsapi.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -14,7 +16,12 @@ import java.util.Objects;
 @ReservationDates(startDateField = "start", endDateField = "end")
 public class Reservation {
 
-    public enum Status {ACTIVE, CANCELLED}
+    public enum Status {
+        @JsonProperty("Active")
+        ACTIVE,
+        @JsonProperty("Cancelled")
+        CANCELLED
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -43,11 +50,13 @@ public class Reservation {
     private Integer numberOfPersons;
 
     @Enumerated(EnumType.STRING)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Status status;
 
     public Reservation() {}
 
-    public Reservation(@NotNull String fistName, @NotNull String lastName, @NotNull @Email String email, @NotNull LocalDate start, @NotNull LocalDate end, @NotNull Integer numberOfPersons) {
+    public Reservation(@NotNull String fistName, @NotNull String lastName, @NotNull @Email String email,
+                       @NotNull LocalDate start, @NotNull LocalDate end, @NotNull Integer numberOfPersons) {
         this.fistName = fistName;
         this.lastName = lastName;
         this.email = email;
