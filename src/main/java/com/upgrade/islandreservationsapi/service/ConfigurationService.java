@@ -10,4 +10,6 @@ public interface ConfigurationService {
     int getMinAheadDays();
 
     int getMaxAheadDays();
+
+    int getMaxDateRange();
 }

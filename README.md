@@ -32,3 +32,4 @@ INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('M
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_RESERVATION', 'Max number of days a reservation can be made for', '3');
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MIN_AHEAD', 'Minimum number of days a reservation must be made ahead', '1');
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_AHEAD', 'Max number of days a reservation can be made ahead', '30');
+INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_DATE_RANGE', 'Max number of days to query for availability', '90');

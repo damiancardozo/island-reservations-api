@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 @Table(name = "Configuration")
 public class Configuration {
 
-    public enum CONFIGURATION_NAMES {MAX_AVAILABILITY, MAX_RESERVATION, MIN_AHEAD, MAX_AHEAD}
+    public enum CONFIGURATION_NAMES {MAX_AVAILABILITY, MAX_RESERVATION, MIN_AHEAD, MAX_AHEAD, MAX_DATE_RANGE}
 
     @Column(name = "Name")
     @NotNull

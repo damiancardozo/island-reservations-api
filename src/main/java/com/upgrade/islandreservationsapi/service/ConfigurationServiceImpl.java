@@ -16,7 +16,8 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     private static final int DEFAULT_MAX_AHEAD_DAYS = 30;
     private static final int DEFAULT_MIN_AHEAD_DAYS = 1;
     private static final int DEFAULT_MAX_DURATION = 3;
-    private static final int DEFAULT_MAX_AVAILABILITY = 3;
+    private static final int DEFAULT_MAX_AVAILABILITY = 100;
+    private static final int DEFAULT_MAX_DATE_RANGE = 30;
 
     @Override
     public int getMaxAvailability() {
@@ -60,6 +61,17 @@ public class ConfigurationServiceImpl implements ConfigurationService {
                     Integer.toString(DEFAULT_MAX_AHEAD_DAYS));
             repository.save(conf);
             value = Optional.of(DEFAULT_MAX_AHEAD_DAYS);
+        }
+        return value.get();
+    }
+
+    public int getMaxDateRange() {
+        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE);
+        if(value.isEmpty()) {
+            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE.toString(),
+                    Integer.toString(DEFAULT_MAX_DATE_RANGE));
+            repository.save(conf);
+            value = Optional.of(DEFAULT_MAX_DATE_RANGE);
         }
         return value.get();
     }
