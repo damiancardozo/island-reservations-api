@@ -2,9 +2,7 @@ package com.upgrade.islandreservationsapi.service;
 
 import com.upgrade.islandreservationsapi.exception.*;
 import com.upgrade.islandreservationsapi.model.Reservation;
-import org.springframework.stereotype.Service;
 
-@Service
 public interface ReservationService {
 
     Reservation getReservation(Integer id) throws ReservationNotFoundException;

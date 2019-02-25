@@ -1,7 +1,5 @@
 package com.upgrade.islandreservationsapi.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -12,7 +10,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Table(name = "reservation")
+@Table(name = "Reservation")
 @ReservationDates(startDateField = "start", endDateField = "end")
 public class Reservation {
 
@@ -23,32 +21,36 @@ public class Reservation {
         CANCELLED
     }
 
+    @Column(name = "ReservationID")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
+    @Column(name = "FirstName")
     @NotBlank()
     private String fistName;
+    @Column(name = "LastName")
     @NotBlank
     private String lastName;
+    @Column(name = "Email")
     @NotBlank
     @Email
     private String email;
+    @Column(name = "Start")
     @NotNull
     @Future()
     @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate start;
+    @Column(name = "End")
     @NotNull
     @Future(message = "Must be a future date")
     @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate end;
+    @Column(name = "NumberOfPersons")
     @NotNull
     @Positive
     private Integer numberOfPersons;
-
+    @Column(name = "Status")
     @Enumerated(EnumType.STRING)
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private Status status;
 
     public Reservation() {}

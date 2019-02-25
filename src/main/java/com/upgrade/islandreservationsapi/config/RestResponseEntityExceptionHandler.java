@@ -2,7 +2,6 @@ package com.upgrade.islandreservationsapi.config;
 
 import com.upgrade.islandreservationsapi.dto.ApiError;
 import com.upgrade.islandreservationsapi.dto.ApiFieldError;
-import com.upgrade.islandreservationsapi.exception.IdsNotMatchingException;
 import com.upgrade.islandreservationsapi.exception.NoAvailabilityForDateException;
 import com.upgrade.islandreservationsapi.exception.ReservationAlreadyCancelledException;
 import com.upgrade.islandreservationsapi.exception.ReservationNotFoundException;
@@ -51,15 +50,6 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             = { NoAvailabilityForDateException.class})
     protected ResponseEntity<Object> handleNoAvailability(
             NoAvailabilityForDateException ex, WebRequest request) {
-        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
-    }
-
-    @ExceptionHandler(value
-            = { IdsNotMatchingException.class})
-    protected ResponseEntity<Object> handleIdsNotMatching(
-            IdsNotMatchingException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);

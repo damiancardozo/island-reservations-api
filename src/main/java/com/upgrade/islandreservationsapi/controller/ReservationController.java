@@ -1,9 +1,12 @@
 package com.upgrade.islandreservationsapi.controller;
 
+import com.upgrade.islandreservationsapi.dto.CreateReservationDTO;
 import com.upgrade.islandreservationsapi.dto.ReservationCreated;
+import com.upgrade.islandreservationsapi.dto.ReservationDTO;
 import com.upgrade.islandreservationsapi.exception.*;
 import com.upgrade.islandreservationsapi.model.Reservation;
 import com.upgrade.islandreservationsapi.service.ReservationService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,28 +26,30 @@ public class ReservationController {
 
     @PostMapping("v1/reservations")
     @ResponseBody
-    public ReservationCreated createReservation(@Valid @RequestBody Reservation reservation)
+    public ReservationCreated createReservation(@Valid @RequestBody CreateReservationDTO reservationDto)
             throws NoAvailabilityForDateException {
-        Reservation newReservation = service.createReservation(reservation);
-        return new ReservationCreated(newReservation.getId());
+        Reservation reservation = new ModelMapper().map(reservationDto, Reservation.class);
+        reservation = service.createReservation(reservation);
+        return new ReservationCreated(reservation.getId());
     }
 
     @PutMapping("v1/reservations/{id}")
     @ResponseBody
-    public Reservation updateReservation(@PathVariable Integer id, @Valid @RequestBody Reservation reservation)
-            throws NoAvailabilityForDateException, IdsNotMatchingException, ReservationNotFoundException {
-        if(reservation.getId() != null && !reservation.getId().equals(id)) {
-            throw new IdsNotMatchingException();
-        } else if(reservation.getId() == null) {
-            reservation.setId(id);
-        }
-        return service.updateReservation(reservation);
+    public ReservationDTO updateReservation(@PathVariable Integer id, @Valid @RequestBody ReservationDTO reservationDto)
+            throws NoAvailabilityForDateException, ReservationNotFoundException {
+        ModelMapper mapper = new ModelMapper();
+        Reservation reservation = mapper.map(reservationDto, Reservation.class);
+        reservation.setId(id);
+        reservation = service.updateReservation(reservation);
+        return mapper.map(reservation, ReservationDTO.class);
     }
 
     @DeleteMapping("v1/reservations/{id}")
     @ResponseBody
-    public Reservation cancelReservation(@PathVariable Integer id)
+    public ReservationDTO cancelReservation(@PathVariable Integer id)
             throws ReservationNotFoundException, ReservationAlreadyCancelledException {
-        return service.cancelReservation(id);
+        Reservation reservation = service.cancelReservation(id);
+        ModelMapper mapper = new ModelMapper();
+        return mapper.map(reservation, ReservationDTO.class);
     }
 }

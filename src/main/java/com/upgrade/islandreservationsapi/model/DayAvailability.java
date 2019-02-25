@@ -1,5 +1,6 @@
 package com.upgrade.islandreservationsapi.model;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
@@ -8,13 +9,16 @@ import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Table(name = "day_availability")
+@Table(name = "DayAvailability")
 public class DayAvailability {
 
+    @Column(name = "Date")
     @Id
     @NotNull
     private LocalDate date;
+    @Column(name = "Availability")
     private int availability;
+    @Column(name = "MaxAvailability")
     private int maxAvailability;
 
     public DayAvailability() {}
