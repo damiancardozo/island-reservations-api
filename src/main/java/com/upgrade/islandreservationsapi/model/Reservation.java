@@ -1,47 +1,62 @@
 package com.upgrade.islandreservationsapi.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.*;
 import java.time.LocalDate;
 import java.util.Objects;
 
 @Entity
-@Table(name = "reservation")
+@Table(name = "Reservation")
+@ReservationDates(startDateField = "start", endDateField = "end")
 public class Reservation {
 
-    public enum Status {ACTIVE, CANCELLED}
+    public enum Status {
+        @JsonProperty("Active")
+        ACTIVE,
+        @JsonProperty("Cancelled")
+        CANCELLED
+    }
 
+    @Column(name = "ReservationID")
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    @NotNull
+    @Column(name = "FirstName")
+    @NotBlank()
     private String fistName;
-    @NotNull
+    @Column(name = "LastName")
+    @NotBlank
     private String lastName;
-    @NotNull
+    @Column(name = "Email")
+    @NotBlank
     @Email
     private String email;
+    @Column(name = "Start")
     @NotNull
+    @Future()
     @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate start;
+    @Column(name = "End")
     @NotNull
+    @Future(message = "Must be a future date")
     @DateTimeFormat(pattern = "yyyy/MM/dd")
-    @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate end;
+    @Column(name = "NumberOfPersons")
     @NotNull
+    @Positive
     private Integer numberOfPersons;
-
+    @Column(name = "Status")
     @Enumerated(EnumType.STRING)
     private Status status;
 
     public Reservation() {}
 
-    public Reservation(@NotNull String fistName, @NotNull String lastName, @NotNull @Email String email, @NotNull LocalDate start, @NotNull LocalDate end, @NotNull Integer numberOfPersons) {
+    public Reservation(@NotNull String fistName, @NotNull String lastName, @NotNull @Email String email,
+                       @NotNull LocalDate start, @NotNull LocalDate end, @NotNull Integer numberOfPersons) {
         this.fistName = fistName;
         this.lastName = lastName;
         this.email = email;
