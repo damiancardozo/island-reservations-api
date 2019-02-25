@@ -51,12 +51,14 @@ public class ReservationControllerTest {
     @Test
     public void testGetReservation() throws Exception {
         Reservation reservation = new Reservation("John", "Oliver", "johnoliver@gmail.com", LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), 5);
+        reservation.setId(101);
         given(reservationService.getReservation(101)).willReturn(reservation);
 
         mvc.perform(get("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(101)))
                 .andExpect(jsonPath("$.email", is("johnoliver@gmail.com")))
                 .andExpect(jsonPath("$.status", is("Active")));
     }
@@ -86,7 +88,12 @@ public class ReservationControllerTest {
             .characterEncoding("ASCII")
             .content(jsonBody))
             .andDo(print())
-            .andExpect(status().is4xxClientError());
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.fieldErrors[*].path",
+                    containsInAnyOrder("start", "start")))
+            .andExpect(jsonPath("$.fieldErrors[*].message",
+                    containsInAnyOrder("must be a future date",
+                            "Reservations must be created at least 1 day(s) ahead of arrival.")));
     }
 
     @Test
@@ -124,7 +131,10 @@ public class ReservationControllerTest {
                 .characterEncoding("ASCII")
                 .content(jsonBody))
                 .andDo(print())
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(101)))
+                .andExpect(jsonPath("$.status", is("Active")))
+                .andExpect(jsonPath("numberOfPersons", is(3)));
     }
 
     @Test
@@ -146,7 +156,13 @@ public class ReservationControllerTest {
                 .content(jsonBody))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("Validation failed")));
+                .andExpect(jsonPath("$.message", is("Validation failed")))
+                .andExpect(jsonPath("$.fieldErrors[*].path",
+                        containsInAnyOrder("start", "start", "end")))
+                .andExpect(jsonPath("$.fieldErrors[*].message",
+                        containsInAnyOrder("must be a future date",
+                                "Max duration is 3 day(s).",
+                                "Reservations must be created at least 1 day(s) ahead of arrival.")));
     }
 
     @Test
@@ -166,7 +182,8 @@ public class ReservationControllerTest {
                 .characterEncoding("ASCII")
                 .content(jsonBody))
                 .andDo(print())
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Id in the url does not match id in the request body.")));
     }
 
     @Test

@@ -26,22 +26,20 @@ public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
-    @NotNull
-    @NotEmpty
+    @NotBlank()
     private String fistName;
-    @NotNull
-    @NotEmpty
+    @NotBlank
     private String lastName;
-    @NotNull
+    @NotBlank
     @Email
     private String email;
     @NotNull
-    @Future
+    @Future()
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate start;
     @NotNull
-    @Future
+    @Future(message = "Must be a future date")
     @DateTimeFormat(pattern = "yyyy/MM/dd")
     @JsonFormat(pattern="yyyy/MM/dd")
     private LocalDate end;
