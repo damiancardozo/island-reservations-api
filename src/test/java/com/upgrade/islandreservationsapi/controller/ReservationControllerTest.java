@@ -53,7 +53,7 @@ public class ReservationControllerTest {
         Reservation reservation = new Reservation("John", "Oliver", "johnoliver@gmail.com", LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), 5);
         given(reservationService.getReservation(101)).willReturn(reservation);
 
-        mvc.perform(get("/reservations/101")
+        mvc.perform(get("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII"))
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ public class ReservationControllerTest {
     public void testGetReservationNotFound() throws Exception {
         given(reservationService.getReservation(101)).willThrow(new ReservationNotFoundException(101));
 
-        mvc.perform(get("/reservations/101")
+        mvc.perform(get("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII"))
                 .andExpect(status().isNotFound());
@@ -81,7 +81,7 @@ public class ReservationControllerTest {
         mapper.registerModule(timeModule);
         String jsonBody = mapper.writeValueAsString(reservation);
 
-        mvc.perform(post("/reservations")
+        mvc.perform(post("/v1/reservations")
             .contentType(MediaType.APPLICATION_JSON)
             .characterEncoding("ASCII")
             .content(jsonBody))
@@ -99,7 +99,7 @@ public class ReservationControllerTest {
         mapper.registerModule(timeModule);
         String jsonBody = mapper.writeValueAsString(reservation);
 
-        mvc.perform(post("/reservations")
+        mvc.perform(post("/v1/reservations")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII")
                 .content(jsonBody))
@@ -119,7 +119,7 @@ public class ReservationControllerTest {
 
         given(reservationService.updateReservation(reservation)).willReturn(reservation);
 
-        mvc.perform(put("/reservations/101")
+        mvc.perform(put("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII")
                 .content(jsonBody))
@@ -140,7 +140,7 @@ public class ReservationControllerTest {
 
         given(reservationService.updateReservation(reservation)).willReturn(reservation);
 
-        mvc.perform(put("/reservations/101")
+        mvc.perform(put("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII")
                 .content(jsonBody))
@@ -161,7 +161,7 @@ public class ReservationControllerTest {
 
         given(reservationService.updateReservation(reservation)).willReturn(reservation);
 
-        mvc.perform(put("/reservations/91")
+        mvc.perform(put("/v1/reservations/91")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII")
                 .content(jsonBody))
@@ -176,7 +176,7 @@ public class ReservationControllerTest {
         reservation.setStatus(Reservation.Status.CANCELLED);
         given(reservationService.cancelReservation(91)).willReturn(reservation);
 
-        mvc.perform(delete("/reservations/91")
+        mvc.perform(delete("/v1/reservations/91")
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("ASCII"))
                 .andExpect(status().isOk())

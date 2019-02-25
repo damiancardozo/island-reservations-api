@@ -15,13 +15,13 @@ public class ReservationController {
     @Autowired
     private ReservationService service;
 
-    @GetMapping("reservations/{id}")
+    @GetMapping("v1/reservations/{id}")
     @ResponseBody
     public Reservation getReservation(@PathVariable Integer id) throws ReservationNotFoundException {
         return service.getReservation(id);
     }
 
-    @PostMapping("reservations")
+    @PostMapping("v1/reservations")
     @ResponseBody
     public ReservationCreated createReservation(@Valid @RequestBody Reservation reservation)
             throws NoAvailabilityForDateException {
@@ -29,7 +29,7 @@ public class ReservationController {
         return new ReservationCreated(newReservation.getId());
     }
 
-    @PutMapping("reservations/{id}")
+    @PutMapping("v1/reservations/{id}")
     @ResponseBody
     public Reservation updateReservation(@PathVariable Integer id, @Valid @RequestBody Reservation reservation)
             throws NoAvailabilityForDateException, IdsNotMatchingException, ReservationNotFoundException {
@@ -41,7 +41,7 @@ public class ReservationController {
         return service.updateReservation(reservation);
     }
 
-    @DeleteMapping("reservations/{id}")
+    @DeleteMapping("v1/reservations/{id}")
     @ResponseBody
     public Reservation cancelReservation(@PathVariable Integer id)
             throws ReservationNotFoundException, ReservationAlreadyCancelledException {

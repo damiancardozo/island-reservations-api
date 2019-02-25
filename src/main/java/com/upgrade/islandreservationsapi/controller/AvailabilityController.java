@@ -12,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
-@RestController("/availability")
+@RestController
 public class AvailabilityController {
 
     @Autowired
     private DayAvailabilityService service;
 
-    @GetMapping()
+    @GetMapping("v1/availability")
     @ResponseBody
     public List<DayAvailability> getAvailabilities(
             @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "MM/dd/yyyy") LocalDate fromDate,
