@@ -58,7 +58,7 @@ public class ReservationControllerTest {
 
         mvc.perform(get("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII"))
+                .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(101)))
                 .andExpect(jsonPath("$.email", is("johnoliver@gmail.com")))
@@ -71,7 +71,7 @@ public class ReservationControllerTest {
 
         mvc.perform(get("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII"))
+                .characterEncoding("UTF-8"))
                 .andExpect(status().isNotFound());
     }
 
@@ -90,7 +90,7 @@ public class ReservationControllerTest {
 
         mvc.perform(post("/v1/reservations")
             .contentType(MediaType.APPLICATION_JSON)
-            .characterEncoding("ASCII")
+            .characterEncoding("UTF-8")
             .content(jsonBody))
             .andDo(print())
             .andExpect(status().isBadRequest())
@@ -98,7 +98,7 @@ public class ReservationControllerTest {
                     containsInAnyOrder("start", "start")))
             .andExpect(jsonPath("$.fieldErrors[*].message",
                     containsInAnyOrder("must be a future date",
-                            "Reservations must be created at least 1 day(s) ahead of arrival.")));
+                            "reservations must be created at least 1 day(s) ahead of arrival.")));
     }
 
     @Test
@@ -116,7 +116,7 @@ public class ReservationControllerTest {
 
         mvc.perform(post("/v1/reservations")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII")
+                .characterEncoding("UTF-8")
                 .content(jsonBody))
                 .andDo(print())
                 .andExpect(status().isOk());
@@ -139,7 +139,7 @@ public class ReservationControllerTest {
 
         mvc.perform(put("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII")
+                .characterEncoding("UTF-8")
                 .content(jsonBody))
                 .andDo(print())
                 .andExpect(status().isOk())
@@ -166,7 +166,7 @@ public class ReservationControllerTest {
 
         mvc.perform(put("/v1/reservations/101")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII")
+                .characterEncoding("UTF-8")
                 .content(jsonBody))
                 .andDo(print())
                 .andExpect(status().isBadRequest())
@@ -175,8 +175,8 @@ public class ReservationControllerTest {
                         containsInAnyOrder("start", "start", "end")))
                 .andExpect(jsonPath("$.fieldErrors[*].message",
                         containsInAnyOrder("must be a future date",
-                                "Max duration is 3 day(s).",
-                                "Reservations must be created at least 1 day(s) ahead of arrival.")));
+                                "max duration is 3 day(s).",
+                                "reservations must be created at least 1 day(s) ahead of arrival.")));
     }
 
     @Test
@@ -188,7 +188,7 @@ public class ReservationControllerTest {
 
         mvc.perform(delete("/v1/reservations/91")
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII"))
+                .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status", is("Cancelled")));
     }
