@@ -1,6 +1,7 @@
 package com.upgrade.islandreservationsapi.controller;
 
 import com.upgrade.islandreservationsapi.dto.DayAvailabilityDTO;
+import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
 import com.upgrade.islandreservationsapi.model.DayAvailability;
 import com.upgrade.islandreservationsapi.service.DayAvailabilityService;
 import org.modelmapper.ModelMapper;
@@ -24,8 +25,9 @@ public class AvailabilityController {
     @GetMapping("v1/availability")
     @ResponseBody
     public List<DayAvailabilityDTO> getAvailabilities(
-            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "MM/dd/yyyy") LocalDate fromDate,
-            @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "MM/dd/yyyy") LocalDate toDate) {
+            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate fromDate,
+            @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate toDate)
+            throws InvalidDatesException {
         if(fromDate == null) {
             fromDate = LocalDate.now().plusDays(1);
         }
