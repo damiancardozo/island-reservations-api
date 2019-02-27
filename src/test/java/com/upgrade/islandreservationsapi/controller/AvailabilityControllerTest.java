@@ -1,5 +1,6 @@
 package com.upgrade.islandreservationsapi.controller;
 
+import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
 import com.upgrade.islandreservationsapi.model.DayAvailability;
 import com.upgrade.islandreservationsapi.service.ConfigurationService;
 import com.upgrade.islandreservationsapi.service.DayAvailabilityService;
@@ -62,9 +63,46 @@ public class AvailabilityControllerTest {
                 .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
                 .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
                 .contentType(MediaType.APPLICATION_JSON)
-                .characterEncoding("ASCII"))
+                .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()", is(10)))
                 .andDo(print());
     }
+
+    @Test
+    public void testGetAvailabilityInvalidDates() throws Exception {
+        LocalDate fromDate = LocalDate.now().plusDays(4);
+        LocalDate toDate = LocalDate.now().plusDays(2);
+
+        given(availabilityService.getAvailabilities(fromDate, toDate))
+                .willThrow(new InvalidDatesException("toDate must be after fromDate."));
+
+        String format = "yyyy/MM/dd";
+        mvc.perform(get("/v1/availability")
+                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
+                .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("toDate must be after fromDate.")))
+                .andDo(print());
+    }
+
+    @Test
+    public void testGetAvailabilityInvalidDateFormat() throws Exception {
+        LocalDate fromDate = LocalDate.now().plusDays(4);
+        LocalDate toDate = LocalDate.now().plusDays(2);
+
+        String format = "yyyy-MM-dd";
+        mvc.perform(get("/v1/availability")
+                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
+                .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("fromDate must have format yyyy/MM/dd")))
+                .andDo(print());
+    }
+
+
 }

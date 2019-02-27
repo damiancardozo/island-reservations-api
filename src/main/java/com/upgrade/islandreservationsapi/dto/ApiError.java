@@ -25,12 +25,6 @@ public class ApiError {
         this.message = message;
     }
 
-    public void addFieldError(ApiFieldError fieldError) {
-        if(fieldErrors != null && fieldError != null) {
-            fieldErrors.add(fieldError);
-        }
-    }
-
     public HttpStatus getStatus() {
         return status;
     }
