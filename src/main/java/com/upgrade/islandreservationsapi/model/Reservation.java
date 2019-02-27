@@ -1,7 +1,6 @@
 package com.upgrade.islandreservationsapi.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -11,7 +10,6 @@ import java.util.Objects;
 
 @Entity
 @Table(name = "Reservation")
-@ReservationDates(startDateField = "start", endDateField = "end")
 public class Reservation {
 
     public enum Status {
@@ -23,7 +21,7 @@ public class Reservation {
 
     @Column(name = "ReservationID")
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
     @Column(name = "FirstName")
     @NotBlank()

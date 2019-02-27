@@ -34,7 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
-
+        reservation.setStatus(Reservation.Status.ACTIVE);
         updateAvailability(reservation);
         return reservationRepository.save(reservation);
     }
@@ -91,13 +91,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     private void updateAvailability(Reservation reservation)
             throws NoAvailabilityForDateException {
-        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd().plusDays(1)).collect(Collectors.toList());
+        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList());
         List<DayAvailability> availabilities = availabilityRepository.findAllById(dates);
         Map<LocalDate, DayAvailability> availabilityMap = availabilities.stream()
                 .collect(Collectors.toMap(DayAvailability::getDate, v -> v));
+        int maxOccupancy = configurationService.getMaxAvailability();
         for(LocalDate date: dates) {
             Optional<DayAvailability> availabilityOpt = Optional.ofNullable(availabilityMap.get(date));
-            int maxOccupancy = configurationService.getMaxAvailability();
             DayAvailability dayAvailability = availabilityOpt.orElse(new DayAvailability(date, maxOccupancy, maxOccupancy));
             dayAvailability.setAvailability(dayAvailability.getAvailability() - reservation.getNumberOfPersons());
             if(dayAvailability.getAvailability() < 0) {
