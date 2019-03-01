@@ -3,7 +3,6 @@ package com.upgrade.islandreservationsapi.service;
 import com.upgrade.islandreservationsapi.exception.NoAvailabilityForDateException;
 import com.upgrade.islandreservationsapi.model.DayAvailability;
 import com.upgrade.islandreservationsapi.model.Reservation;
-import com.upgrade.islandreservationsapi.repository.DayAvailabilityRepository;
 import com.upgrade.islandreservationsapi.repository.ReservationRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +35,7 @@ public class ReservationServiceTest {
     }
 
     @MockBean
-    private DayAvailabilityRepository availabilityRepository;
+    private DayAvailabilityService availabilityService;
 
     @MockBean
     private ReservationRepository reservationRepository;
@@ -63,15 +62,11 @@ public class ReservationServiceTest {
                 fromDate, toDate, 10);
         reservationWithId.setId(100);
 
-        Mockito.when(reservationRepository.save(reservation)).thenReturn(reservationWithId);
-        Mockito.when(availabilityRepository.findById(fromDate)).thenReturn(Optional.empty());
-        Mockito.when(availabilityRepository.findById(toDate)).thenReturn(Optional.empty());
-
         DayAvailability availability1 = new DayAvailability(fromDate, 90, 100);
         DayAvailability availability2 = new DayAvailability(toDate, 90, 100);
 
-        Mockito.when(availabilityRepository.save(availability1)).thenReturn(availability1);
-        Mockito.when(availabilityRepository.save(availability2)).thenReturn(availability2);
+        Mockito.when(reservationRepository.save(reservation)).thenReturn(reservationWithId);
+        Mockito.when(availabilityService.updateDayAvailability(reservation)).thenReturn(List.of(availability1, availability2));
 
         Reservation createdReservation = reservationService.createReservation(reservation);
 
@@ -90,17 +85,12 @@ public class ReservationServiceTest {
                 fromDate, toDate, 10);
         reservationWithId.setId(100);
 
-        DayAvailability availability1 = new DayAvailability(fromDate, 85, 100);
+        DayAvailability availability1 = new DayAvailability(fromDate, 75, 100);
         DayAvailability availability2 = new DayAvailability(toDate, 90, 100);
 
+
         Mockito.when(reservationRepository.save(reservation)).thenReturn(reservationWithId);
-        Mockito.when(availabilityRepository.findById(fromDate)).thenReturn(Optional.of(availability1));
-        Mockito.when(availabilityRepository.findById(toDate)).thenReturn(Optional.empty());
-
-        DayAvailability availabilityUpdated = new DayAvailability(fromDate, 75, 100);
-
-        Mockito.when(availabilityRepository.save(availabilityUpdated)).thenReturn(availabilityUpdated);
-        Mockito.when(availabilityRepository.save(availability2)).thenReturn(availability2);
+        Mockito.when(availabilityService.updateDayAvailability(reservation)).thenReturn(List.of(availability1, availability2));
 
         Reservation createdReservation = reservationService.createReservation(reservation);
 
@@ -120,14 +110,10 @@ public class ReservationServiceTest {
                 fromDate, toDate, 12);
         newReservation.setId(101);
 
-        DayAvailability a1 = new DayAvailability(fromDate, 90, 100);
-        DayAvailability a2 = new DayAvailability(toDate, 90, 100);
-        List<LocalDate> dates = List.of(fromDate, toDate);
-        List<DayAvailability> availabilities = List.of(a1, a2);
+        DayAvailability a1 = new DayAvailability(fromDate, 88, 100);
 
         Mockito.when(reservationRepository.findById(101)).thenReturn(Optional.of(existingReservation));
-        Mockito.when(availabilityRepository.findAllById(dates)).thenReturn(availabilities);
-        Mockito.when(availabilityRepository.saveAll(availabilities)).thenReturn(availabilities);
+        Mockito.when(availabilityService.addAvailability(fromDate, toDate, -2)).thenReturn(List.of(a1));
         Mockito.when(reservationRepository.save(existingReservation)).thenReturn(newReservation);
 
         reservationService.updateReservation(newReservation);
@@ -150,21 +136,14 @@ public class ReservationServiceTest {
                 newFromDate, newToDate, 12);
         newReservation.setId(101);
 
-        DayAvailability a1 = new DayAvailability(fromDate, 90, 100);
-        DayAvailability a2 = new DayAvailability(toDate, 90, 100);
-        List<LocalDate> dates = List.of(fromDate, toDate);
-        List<DayAvailability> availabilities = List.of(a1, a2);
-
-        DayAvailability a3 = new DayAvailability(newFromDate, 88, 100);
-        DayAvailability a4 = new DayAvailability(fromDate, 88, 100);
-        DayAvailability a5 = new DayAvailability(toDate, 88, 100);
-        DayAvailability a6 = new DayAvailability(newToDate, 88, 100);
-        List<DayAvailability> newAvailabilities = List.of(a3, a4, a5, a6);
+        DayAvailability a1 = new DayAvailability(newFromDate, 88, 100);
+        DayAvailability a2 = new DayAvailability(fromDate, 88, 100);
+        DayAvailability a3 = new DayAvailability(toDate, 88, 100);
+        List<DayAvailability> newAvailabilities = List.of(a1, a2, a3);
 
         Mockito.when(reservationRepository.findById(101)).thenReturn(Optional.of(existingReservation));
-        Mockito.when(availabilityRepository.findAllById(dates)).thenReturn(availabilities);
-        Mockito.when(availabilityRepository.saveAll(availabilities)).thenReturn(availabilities);
-        Mockito.when(availabilityRepository.saveAll(newAvailabilities)).thenReturn(newAvailabilities);
+        Mockito.when(availabilityService.addAvailability(fromDate, toDate, 10)).thenReturn(List.of(a2));
+        Mockito.when(availabilityService.updateDayAvailability(newReservation)).thenReturn(newAvailabilities);
         Mockito.when(reservationRepository.save(existingReservation)).thenReturn(newReservation);
 
         newReservation = reservationService.updateReservation(newReservation);
