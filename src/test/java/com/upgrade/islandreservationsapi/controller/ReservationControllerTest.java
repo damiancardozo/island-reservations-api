@@ -60,7 +60,6 @@ public class ReservationControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(101)))
                 .andExpect(jsonPath("$.email", is("johnoliver@gmail.com")))
                 .andExpect(jsonPath("$.status", is("Active")));
     }
