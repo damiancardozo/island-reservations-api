@@ -20,8 +20,9 @@ public class ReservationController {
 
     @GetMapping("v1/reservations/{id}")
     @ResponseBody
-    public Reservation getReservation(@PathVariable Integer id) throws ReservationNotFoundException {
-        return service.getReservation(id);
+    public ReservationDTO getReservation(@PathVariable Integer id) throws ReservationNotFoundException {
+        Reservation reservation = service.getReservation(id);
+        return new ModelMapper().map(reservation, ReservationDTO.class);
     }
 
     @PostMapping("v1/reservations")
@@ -36,10 +37,13 @@ public class ReservationController {
     @PutMapping("v1/reservations/{id}")
     @ResponseBody
     public ReservationDTO updateReservation(@PathVariable Integer id, @Valid @RequestBody ReservationDTO reservationDto)
-            throws NoAvailabilityForDateException, ReservationNotFoundException {
+            throws NoAvailabilityForDateException, ReservationNotFoundException, StatusChangeNotAllowedException, ReservationCancelledException {
         ModelMapper mapper = new ModelMapper();
         Reservation reservation = mapper.map(reservationDto, Reservation.class);
         reservation.setId(id);
+        if(reservation.getStatus() == null) {
+            reservation.setStatus(Reservation.Status.ACTIVE);
+        }
         reservation = service.updateReservation(reservation);
         return mapper.map(reservation, ReservationDTO.class);
     }

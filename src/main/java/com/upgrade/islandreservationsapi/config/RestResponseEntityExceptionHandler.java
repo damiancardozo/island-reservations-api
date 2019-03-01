@@ -2,10 +2,7 @@ package com.upgrade.islandreservationsapi.config;
 
 import com.upgrade.islandreservationsapi.dto.ApiError;
 import com.upgrade.islandreservationsapi.dto.ApiFieldError;
-import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
-import com.upgrade.islandreservationsapi.exception.NoAvailabilityForDateException;
-import com.upgrade.islandreservationsapi.exception.ReservationAlreadyCancelledException;
-import com.upgrade.islandreservationsapi.exception.ReservationNotFoundException;
+import com.upgrade.islandreservationsapi.exception.*;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
@@ -40,8 +37,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             = { ReservationNotFoundException.class})
     protected ResponseEntity<Object> handleNotFound(
             ReservationNotFoundException ex, WebRequest request) {
-        String message = "Reservation not found";
-        ApiError error = new ApiError(HttpStatus.NOT_FOUND, message);
+        ApiError error = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
         return handleExceptionInternal(ex, error,
                 new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
@@ -68,6 +64,24 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             = { InvalidDatesException.class})
     protected ResponseEntity<Object> handleInvalidDates(
             InvalidDatesException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return handleExceptionInternal(ex, error,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(value
+            = { ReservationCancelledException.class})
+    protected ResponseEntity<Object> handleReservationCancelled(
+            ReservationCancelledException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+        return handleExceptionInternal(ex, error,
+                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler(value
+            = { StatusChangeNotAllowedException.class})
+    protected ResponseEntity<Object> handleStatusChangeNotAllowed(
+            StatusChangeNotAllowedException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
                 new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
