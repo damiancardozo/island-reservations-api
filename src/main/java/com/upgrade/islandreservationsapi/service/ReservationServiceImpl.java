@@ -7,6 +7,8 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -32,6 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
         reservation.setStatus(Reservation.Status.ACTIVE);
         logger.info("Creating reservation {}", reservation.toString());
@@ -40,6 +43,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public Reservation updateReservation(Reservation reservation)
             throws NoAvailabilityForDateException, ReservationNotFoundException,
                 ReservationCancelledException, StatusChangeNotAllowedException {
@@ -84,9 +88,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public Reservation cancelReservation(Integer id)
             throws ReservationNotFoundException, ReservationAlreadyCancelledException {
-        logger.info("Cancelling reserevation id {}", id);
+        logger.info("Cancelling reservation id {}", id);
         final Optional<Reservation> reservationOpt = reservationRepository.findById(id);
         reservationOpt.ifPresentOrElse(r -> logger.info("Reservation id {} found", r.getId()),
                 () -> logger.info("Reservation not found. Can't cancel."));

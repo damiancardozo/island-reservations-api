@@ -81,7 +81,9 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
     public List<DayAvailability> updateDayAvailability(Reservation reservation)
             throws NoAvailabilityForDateException {
         List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList());
+        logger.debug("updateDayAvailability(): finding availabilities by id: {}", dates);
         List<DayAvailability> availabilities = availabilityRepository.findAllById(dates);
+        logger.debug("updateDayAvailability(): found {} DayAvailability records", availabilities.size());
         Map<LocalDate, DayAvailability> availabilityMap = availabilities.stream()
                 .collect(Collectors.toMap(DayAvailability::getDate, v -> v));
         int maxOccupancy = configurationService.getMaxAvailability();

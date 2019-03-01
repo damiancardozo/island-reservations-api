@@ -1,0 +1,2 @@
+insert into Reservation(ReservationID, FirstName, LastName, Email, Start, End, NumberOfPersons, Status)
+values (1, 'John', 'Oliver', 'johno@gmail.com', DATEADD('DAY', 1, CURRENT_DATE), DATEADD('DAY', 3, CURRENT_DATE), 10, 'ACTIVE');
