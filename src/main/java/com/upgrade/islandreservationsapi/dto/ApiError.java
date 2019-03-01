@@ -3,7 +3,6 @@ package com.upgrade.islandreservationsapi.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.http.HttpStatus;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class ApiError {
@@ -11,27 +10,19 @@ public class ApiError {
     private HttpStatus status;
     private String message;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private List<String> errors;
+    private List<ApiFieldError> fieldErrors;
 
-    public ApiError(HttpStatus status, String message, List<String> errors) {
+    public ApiError(HttpStatus status, String message, List<ApiFieldError> fieldErrors) {
         super();
         this.status = status;
         this.message = message;
-        this.errors = errors;
-    }
-
-    public ApiError(HttpStatus status, String message, String error) {
-        super();
-        this.status = status;
-        this.message = message;
-        errors = Arrays.asList(error);
+        this.fieldErrors = fieldErrors;
     }
 
     public ApiError(HttpStatus status, String message) {
         super();
         this.status = status;
         this.message = message;
-        errors = null;
     }
 
     public HttpStatus getStatus() {
@@ -50,11 +41,11 @@ public class ApiError {
         this.message = message;
     }
 
-    public List<String> getErrors() {
-        return errors;
+    public List<ApiFieldError> getFieldErrors() {
+        return fieldErrors;
     }
 
-    public void setErrors(List<String> errors) {
-        this.errors = errors;
+    public void setFieldErrors(List<ApiFieldError> fieldErrors) {
+        this.fieldErrors = fieldErrors;
     }
 }
