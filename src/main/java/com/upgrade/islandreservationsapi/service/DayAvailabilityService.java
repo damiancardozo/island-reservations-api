@@ -40,7 +40,8 @@ public interface DayAvailabilityService {
      * @param fromDate inclusive
      * @param toDate exclusive
      * @param number number to add to current availability for all DayAvailability records.
+     * @return List of DayAvailability for the date period with the availability updated
      */
-    void addAvailability(LocalDate fromDate, LocalDate toDate, int number);
+    List<DayAvailability> addAvailability(LocalDate fromDate, LocalDate toDate, int number);
 
 }

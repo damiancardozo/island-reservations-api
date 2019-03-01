@@ -89,17 +89,19 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
         int maxOccupancy = configurationService.getMaxAvailability();
         for(LocalDate date: dates) {
             Optional<DayAvailability> availabilityOpt = Optional.ofNullable(availabilityMap.get(date));
-            DayAvailability dayAvailability = availabilityOpt.orElse(new DayAvailability(date, maxOccupancy, maxOccupancy));
-            dayAvailability.setAvailability(dayAvailability.getAvailability() - reservation.getNumberOfPersons());
-            if(dayAvailability.getAvailability() < 0) {
+            if(availabilityOpt.isEmpty()) {
+                availabilities.add(new DayAvailability(date, maxOccupancy - reservation.getNumberOfPersons(), maxOccupancy));
+            } else if(availabilityOpt.get().getAvailability() - reservation.getNumberOfPersons() < 0) {
                 throw new NoAvailabilityForDateException();
+            } else {
+                DayAvailability availability = availabilityOpt.get();
+                availability.setAvailability(availability.getAvailability() - reservation.getNumberOfPersons());
             }
-            availabilities.add(dayAvailability);
         }
         return availabilityRepository.saveAll(availabilities);
     }
 
-    public void addAvailability(LocalDate fromDate, LocalDate toDate, int number) {
+    public List<DayAvailability> addAvailability(LocalDate fromDate, LocalDate toDate, int number) {
         logger.info("Adding {} to the availability to all DayAvailability records between {} and {}.",
                 number, fromDate.format(formatter), toDate.format(formatter));
         List<LocalDate> dates = fromDate.datesUntil(toDate).collect(Collectors.toList());
@@ -107,6 +109,6 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
         for(DayAvailability availability: availabilities) {
             availability.setAvailability(availability.getAvailability() + number);
         }
-        availabilityRepository.saveAll(availabilities);
+        return availabilityRepository.saveAll(availabilities);
     }
 }
