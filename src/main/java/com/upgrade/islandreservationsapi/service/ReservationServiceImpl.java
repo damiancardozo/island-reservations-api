@@ -7,8 +7,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import javax.transaction.Transactional;
 import java.util.Optional;
 
 @Service
@@ -29,29 +30,32 @@ public class ReservationServiceImpl implements ReservationService {
     public Reservation getReservation(Integer id) throws ReservationNotFoundException {
         logger.info("Reading reservation with id {}", id);
         Optional<Reservation> reservationOpt = reservationRepository.findById(id);
-        reservationOpt.ifPresentOrElse(r -> logger.info("Reservation found. Returning.."), () -> logger.info("Reservation not found."));
+        reservationOpt.ifPresentOrElse(r -> logger.info("Reservation found. Returning.."),
+                () -> logger.info("Reservation not found."));
         return reservationOpt.orElseThrow(ReservationNotFoundException::new);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
         reservation.setStatus(Reservation.Status.ACTIVE);
-        logger.info("Creating reservation {}", reservation.toString());
+        logger.debug("createReservation(): updating uvalability...");
         availabilityService.updateDayAvailability(reservation);
+        logger.info("Creating reservation {}", reservation.toString());
         return reservationRepository.save(reservation);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation updateReservation(Reservation reservation)
             throws NoAvailabilityForDateException, ReservationNotFoundException,
                 ReservationCancelledException, StatusChangeNotAllowedException {
         logger.info("Updating reservation with id {}", reservation.getId());
         final Optional<Reservation> oldReservationOpt = reservationRepository.findById(reservation.getId());
-        oldReservationOpt.ifPresentOrElse(r -> logger.info("Found existing reservation with id {}", r.getId()),
+        oldReservationOpt.ifPresentOrElse(r -> logger.info("Found existing reservation with id {}, version {}",
+                r.getId(), r.getVersion()),
                 () -> logger.info("Reservation not found. Can't update."));
-        final Reservation oldReservation = oldReservationOpt
+        Reservation oldReservation = oldReservationOpt
                 .orElseThrow(ReservationNotFoundException::new);
         if(oldReservation.getStatus() == Reservation.Status.CANCELLED) {
             throw new ReservationCancelledException();
@@ -70,25 +74,34 @@ public class ReservationServiceImpl implements ReservationService {
                 || !oldReservation.getEnd().equals(reservation.getEnd());
         final boolean numberChanged = !oldReservation.getNumberOfPersons().equals(reservation.getNumberOfPersons());
 
+        oldReservation.setFistName(reservation.getFistName());
+        oldReservation.setLastName(reservation.getLastName());
+        oldReservation.setEmail(reservation.getEmail());
+
         if(!datesChanged && !numberChanged) {
-            logger.info("Dates, number of persons and status did not change. No need to update availability.");
-            return reservation;
+            logger.info("udpateReservation(): Dates, number of persons and status did not change. " +
+                    "No need to update availability.");
+            return reservationRepository.save(oldReservation);
         }
 
         if(!datesChanged) {
-            logger.info("Dates did not change. Updating availability for dates.");
+            logger.info("udpateReservation(): Dates did not change. Updating availability for dates.");
             int difference = oldReservation.getNumberOfPersons() - reservation.getNumberOfPersons();
             availabilityService.addAvailability(oldReservation.getStart(), oldReservation.getEnd(), difference);
         } else {
-            logger.info("Updating availability for old and new dates");
+            logger.info("udpateReservation(): Updating availability for old and new dates");
             availabilityService.addAvailability(oldReservation.getStart(), oldReservation.getEnd(), oldReservation.getNumberOfPersons());
             availabilityService.updateDayAvailability(reservation);
         }
-        return reservationRepository.save(reservation);
+        logger.debug("udpateReservation(): saving reservation...");
+        oldReservation.setStart(reservation.getStart());
+        oldReservation.setEnd(reservation.getEnd());
+        oldReservation.setNumberOfPersons(reservation.getNumberOfPersons());
+        return reservationRepository.saveAndFlush(oldReservation);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation cancelReservation(Integer id)
             throws ReservationNotFoundException, ReservationAlreadyCancelledException {
         logger.info("Cancelling reservation id {}", id);

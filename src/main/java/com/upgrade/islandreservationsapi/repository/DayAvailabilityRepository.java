@@ -8,11 +8,14 @@ import javax.persistence.LockModeType;
 import java.time.LocalDate;
 import java.util.List;
 
-public interface DayAvailabilityRepository extends JpaRepository<DayAvailability, LocalDate> {
+public interface DayAvailabilityRepository extends JpaRepository<DayAvailability, LocalDate>, DayAvailabilityRepositoryCustom {
 
     List<DayAvailability> findByDateBetweenOrderByDateAsc(LocalDate from, LocalDate to);
 
     @Override
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     List<DayAvailability> findAllById(Iterable<LocalDate> iterable);
+
+    void refresh(DayAvailability da);
+
 }

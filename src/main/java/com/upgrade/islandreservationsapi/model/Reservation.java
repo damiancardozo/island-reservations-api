@@ -50,6 +50,9 @@ public class Reservation {
     @Column(name = "Status")
     @Enumerated(EnumType.STRING)
     private Status status;
+    @Version
+    @Column(name = "Version")
+    private long version;
 
     public Reservation() {}
 
@@ -88,6 +91,7 @@ public class Reservation {
                 ", end=" + end +
                 ", numberOfPersons=" + numberOfPersons +
                 ", status=" + status +
+                ", version=" + version+
                 '}';
     }
 
@@ -153,5 +157,13 @@ public class Reservation {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 }
