@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -39,7 +40,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             ReservationNotFoundException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.NOT_FOUND, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler(value
@@ -48,7 +49,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             ReservationAlreadyCancelledException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler(value
@@ -57,7 +58,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             NoAvailabilityForDateException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler(value
@@ -66,7 +67,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             InvalidDatesException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler(value
@@ -75,7 +76,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             ReservationCancelledException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler(value
@@ -84,7 +85,16 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
             StatusChangeNotAllowedException ex, WebRequest request) {
         ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
         return handleExceptionInternal(ex, error,
-                new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+                new HttpHeaders(), error.getStatus(), request);
+    }
+
+    @ExceptionHandler(value
+            = { ObjectOptimisticLockingFailureException.class})
+    protected ResponseEntity<Object> handleOptimisticLock(
+            ObjectOptimisticLockingFailureException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.CONFLICT, "Record was updated by another client at the same time.");
+        return handleExceptionInternal(ex, error,
+                new HttpHeaders(), error.getStatus(), request);
     }
 
     @ExceptionHandler({ ConstraintViolationException.class })
