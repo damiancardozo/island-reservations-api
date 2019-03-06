@@ -1,8 +1,6 @@
 package com.upgrade.islandreservationsapi.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -35,13 +33,10 @@ public class Reservation {
     private String email;
     @Column(name = "Start")
     @NotNull
-    @Future()
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
     private LocalDate start;
     @Column(name = "End")
     @NotNull
-    @Future(message = "Must be a future date")
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @Future
     private LocalDate end;
     @Column(name = "NumberOfPersons")
     @NotNull

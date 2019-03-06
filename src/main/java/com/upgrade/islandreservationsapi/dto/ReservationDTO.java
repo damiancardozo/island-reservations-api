@@ -7,7 +7,7 @@ import com.upgrade.islandreservationsapi.validator.ReservationDates;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
 
-@ReservationDates(startDateField = "start", endDateField = "end")
+@ReservationDates(startDateField = "start", endDateField = "end", action = "UPDATING")
 public class ReservationDTO {
 
     @NotBlank()
@@ -18,11 +18,11 @@ public class ReservationDTO {
     @Email
     private String email;
     @NotNull
-    @Future
-    @JsonFormat(pattern="yyyy/MM/dd")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate start;
     @NotNull
-    @JsonFormat(pattern="yyyy/MM/dd")
+    @Future
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate end;
     @NotNull
     @Positive

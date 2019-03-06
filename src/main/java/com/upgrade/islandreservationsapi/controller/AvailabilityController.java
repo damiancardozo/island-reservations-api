@@ -32,10 +32,10 @@ public class AvailabilityController {
             @ApiResponse(code = 400, message = "Dates are invalid")
     })
     public List<DayAvailabilityDTO> getAvailabilities(
-            @ApiParam(name = "fromDate", format = "yyyy/MM/dd", defaultValue = "(tomorrow's date)")
-            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate fromDate,
-            @ApiParam(name = "toDate", format = "yyyy/MM/dd", defaultValue = "(fromDate plus one month)")
-            @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "yyyy/MM/dd") LocalDate toDate)
+            @ApiParam(name = "fromDate", format = "yyyy-MM-dd", defaultValue = "(tomorrow's date)")
+            @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate fromDate,
+            @ApiParam(name = "toDate", format = "yyyy-MM-dd", defaultValue = "(fromDate plus one month)")
+            @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate toDate)
             throws InvalidDatesException {
         if(fromDate == null) {
             fromDate = LocalDate.now().plusDays(1);

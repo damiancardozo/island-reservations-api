@@ -18,7 +18,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {
-        logger.info("staring application. setting default values for configurations in case they are not defined.");
+        logger.info("Starting application. Setting default values for configurations in case they are not defined.");
         configurationService.getMaxAvailability();
         configurationService.getMaxDateRange();
         configurationService.getMaxAheadDays();

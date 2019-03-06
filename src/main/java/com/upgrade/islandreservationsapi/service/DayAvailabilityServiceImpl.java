@@ -48,7 +48,7 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
             logger.info("getAvailabilities(): Invalid dates. toDate must be after fromDate.");
             throw new InvalidDatesException("toDate must be after fromDate.");
         }
-        int maxDateRange = configurationService.getMaxDateRange();
+        final int maxDateRange = configurationService.getMaxDateRange();
         if(ChronoUnit.DAYS.between(fromDate, toDate) > maxDateRange) {
             logger.info("getAvailabilities(): Invalid dates. Date range is too long.");
             throw new InvalidDatesException("Date range is too long. Please send a date range of " + maxDateRange + " days max.");
@@ -58,11 +58,11 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
             throw new InvalidDatesException("Can only check availability starting tomorrow.");
         }
 
-        int maxAvailability = configurationService.getMaxAvailability();
+        final int maxAvailability = configurationService.getMaxAvailability();
 
-        List<DayAvailability> availabilities = availabilityRepository.findByDateBetweenOrderByDateAsc(fromDate, toDate);
+        final List<DayAvailability> availabilities = availabilityRepository.findByDateBetweenOrderByDateAsc(fromDate, toDate);
         LocalDate date = LocalDate.from(fromDate);
-        List<DayAvailability> allAvailabilities = new ArrayList<>();
+        final List<DayAvailability> allAvailabilities = new ArrayList<>();
         if(availabilities.isEmpty()) {
             logger.info("No DayAvailability records found in database for period {}-{}. " +
                     "Will return max availability for all these dates.", fromDate.format(formatter), toDate.format(formatter));
@@ -88,17 +88,17 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
     @Transactional(propagation = Propagation.REQUIRED)
     public List<DayAvailability> updateDayAvailability(Reservation reservation)
             throws NoAvailabilityForDateException {
-        List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList());
+        final List<LocalDate> dates = reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList());
         logger.debug("updateDayAvailability(): finding dates by id: {}", dates);
         // lock dates
-        List<Dates> datesList = datesRepository.findAllById(dates);
+        final List<Dates> datesList = datesRepository.findAllById(dates);
         logger.debug("locked dates {}", datesList);
         logger.debug("updateDayAvailability(): finding availabilities by id: {}", dates);
         List<DayAvailability> availabilities = availabilityRepository.findAllById(dates);
         logger.debug("updateDayAvailability(): found {} DayAvailability records: {}", availabilities.size(), availabilities.toString());
-        Map<LocalDate, DayAvailability> availabilityMap = availabilities.stream()
+        final Map<LocalDate, DayAvailability> availabilityMap = availabilities.stream()
                 .collect(Collectors.toMap(DayAvailability::getDate, v -> v));
-        int maxOccupancy = configurationService.getMaxAvailability();
+        final int maxOccupancy = configurationService.getMaxAvailability();
         for(LocalDate date: dates) {
             Optional<DayAvailability> availabilityOpt = Optional.ofNullable(availabilityMap.get(date));
             if(availabilityOpt.isEmpty()) {
@@ -128,9 +128,9 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
     public List<DayAvailability> addAvailability(LocalDate fromDate, LocalDate toDate, int number) {
         logger.info("Adding {} to the availability to all DayAvailability records between {} and {}.",
                 number, fromDate.format(formatter), toDate.format(formatter));
-        List<LocalDate> dates = fromDate.datesUntil(toDate).collect(Collectors.toList());
+        final List<LocalDate> dates = fromDate.datesUntil(toDate).collect(Collectors.toList());
         // lock dates
-        List<Dates> allDates = datesRepository.findAllById(dates);
+        final List<Dates> allDates = datesRepository.findAllById(dates);
         logger.debug("locked dates {}", allDates);
         logger.debug("addAvailability(): finding dates by id: {}", dates);
         List<DayAvailability> availabilities = availabilityRepository.findAllById(dates);

@@ -6,7 +6,7 @@ import java.time.LocalDate;
 
 public class DayAvailabilityDTO {
 
-    @JsonFormat(pattern="yyyy/MM/dd")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate date;
     private int availability;
 

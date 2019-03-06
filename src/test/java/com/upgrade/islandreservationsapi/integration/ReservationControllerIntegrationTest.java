@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -187,6 +188,93 @@ public class ReservationControllerIntegrationTest {
 
         assertEquals(4, reservationRepository.count());
 
+    }
+
+    @Test
+    public void testUpdateReservationInvalidStart() throws Exception {
+        Reservation reservation = new Reservation("John", "Doe", "jdoe@hotmail.com",
+                LocalDate.now().plusDays(1), LocalDate.now().plusDays(2), 15);
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        ModelMapper modelMapper = new ModelMapper();
+        ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule timeModule = new JavaTimeModule();
+        mapper.registerModule(timeModule);
+
+        dto.setStart(LocalDate.now());
+        String jsonBody = mapper.writeValueAsString(dto);
+
+        mvc.perform(put("/v1/reservations/" + reservation.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(jsonBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Validation failed")))
+                .andExpect(jsonPath("$.fieldErrors[*].path",
+                        containsInAnyOrder("start")))
+                .andExpect(jsonPath("$.fieldErrors[*].message",
+                        containsInAnyOrder("start date must be at least 1 day(s) in the future.")));
+
+        Optional<Reservation> reservationInDb = reservationRepository.findById(reservation.getId());
+        assertTrue(reservationInDb.isPresent());
+        assertEquals(LocalDate.now().plusDays(2), reservationInDb.get().getEnd());
+    }
+
+    @Test
+    public void testUpdateReservationWhenStarted() throws Exception {
+        Reservation reservation = new Reservation("John", "Doe", "jdoe@hotmail.com",
+                LocalDate.now().minusDays(1), LocalDate.now().plusDays(1), 15);
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        ModelMapper modelMapper = new ModelMapper();
+        ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule timeModule = new JavaTimeModule();
+        mapper.registerModule(timeModule);
+
+        dto.setEnd(LocalDate.now().plusDays(2));
+        String jsonBody = mapper.writeValueAsString(dto);
+
+        mvc.perform(put("/v1/reservations/" + reservation.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(jsonBody))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        Optional<Reservation> reservationInDb = reservationRepository.findById(reservation.getId());
+        assertTrue(reservationInDb.isPresent());
+        assertEquals(LocalDate.now().plusDays(2), reservationInDb.get().getEnd());
+    }
+
+    @Test
+    public void testUpdateReservationStartDateWhenStarted() throws Exception {
+        Reservation reservation = new Reservation("John", "Doe", "jdoe@hotmail.com",
+                LocalDate.now().minusDays(1), LocalDate.now().plusDays(1), 15);
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        ModelMapper modelMapper = new ModelMapper();
+        ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule timeModule = new JavaTimeModule();
+        mapper.registerModule(timeModule);
+
+        dto.setStart(LocalDate.now());
+        String jsonBody = mapper.writeValueAsString(dto);
+
+        mvc.perform(put("/v1/reservations/" + reservation.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(jsonBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message", is("Validation failed")))
+                .andExpect(jsonPath("$.fieldErrors[*].path",
+                        containsInAnyOrder("start")))
+                .andExpect(jsonPath("$.fieldErrors[*].message",
+                        containsInAnyOrder("start date can't be updated for a reservation that already started")));
     }
 
     @Test

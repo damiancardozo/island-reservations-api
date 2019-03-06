@@ -12,6 +12,12 @@ public class Dates {
     @Id
     private LocalDate date;
 
+    public Dates() {}
+
+    public Dates(LocalDate date) {
+        this.date = date;
+    }
+
     public LocalDate getDate() {
         return date;
     }

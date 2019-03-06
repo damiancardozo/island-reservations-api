@@ -58,7 +58,7 @@ public class ReservationController {
             @ApiResponse(code = 404, message = "Reservation not found")
     })
     public ReservationDTO updateReservation(@PathVariable Integer id, @Valid @RequestBody ReservationDTO reservationDto)
-            throws NoAvailabilityForDateException, ReservationNotFoundException, StatusChangeNotAllowedException, ReservationCancelledException {
+            throws NoAvailabilityForDateException, ReservationNotFoundException, InvalidReservationException {
         ModelMapper mapper = new ModelMapper();
         Reservation reservation = mapper.map(reservationDto, Reservation.class);
         reservation.setId(id);

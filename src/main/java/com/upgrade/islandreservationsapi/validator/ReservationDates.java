@@ -21,4 +21,6 @@ public @interface ReservationDates {
 
     String endDateField();
 
+    String action() default "CREATING";
+
 }
