@@ -1,6 +1,10 @@
 # island-reservations-api
 REST API to handle reservations for a campsite in an island in the Pacific Ocean
 
+To see API documentation, start app and browse http://localhost:8080/swagger-ui.html
+
+
+
 SQL to create Database with inserts for Configuration
 
 CREATE SCHEMA `Island`;
@@ -29,14 +33,20 @@ CREATE TABLE `Island`.`Configuration` (
   PRIMARY KEY (`Name`));
 
 -- configuration records
+
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_AVAILABILITY', 'Max number of people that can visit the island one day', '100');
+
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_RESERVATION', 'Max number of days a reservation can be made for', '3');
+
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MIN_AHEAD', 'Minimum number of days a reservation must be made ahead', '1');
+
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_AHEAD', 'Max number of days a reservation can be made ahead', '30');
+
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_DATE_RANGE', 'Max number of days to query for availability', '90');
 
 
 -- view with dates used to lock before creating/updating DayAvailability records
+
 CREATE VIEW `Dates` AS
 SELECT a.Date
 from (
