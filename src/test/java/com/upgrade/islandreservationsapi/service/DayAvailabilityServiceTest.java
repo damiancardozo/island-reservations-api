@@ -2,8 +2,10 @@ package com.upgrade.islandreservationsapi.service;
 
 import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
 import com.upgrade.islandreservationsapi.exception.NoAvailabilityForDateException;
+import com.upgrade.islandreservationsapi.model.Dates;
 import com.upgrade.islandreservationsapi.model.DayAvailability;
 import com.upgrade.islandreservationsapi.model.Reservation;
+import com.upgrade.islandreservationsapi.repository.DatesRepository;
 import com.upgrade.islandreservationsapi.repository.DayAvailabilityRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,9 +21,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
 
 @RunWith(SpringRunner.class)
 public class DayAvailabilityServiceTest {
@@ -41,6 +45,9 @@ public class DayAvailabilityServiceTest {
     @MockBean
     private ConfigurationService configurationService;
 
+    @MockBean
+    private DatesRepository datesRepository;
+
     @Autowired
     private DayAvailabilityService availabilityService;
 
@@ -51,6 +58,10 @@ public class DayAvailabilityServiceTest {
     public void init() {
         Mockito.when(configurationService.getMaxAvailability()).thenReturn(DEFAULT_MAX_AVAILABILITY);
         Mockito.when(configurationService.getMaxDateRange()).thenReturn(DEFAULT_MAX_DATE_RANGE);
+
+        List<Dates> dates = new ArrayList<>();
+        LocalDate.now().datesUntil(LocalDate.now().plusDays(30)).forEach(d -> dates.add(new Dates(d)));
+        Mockito.when(datesRepository.findAllById(any())).thenReturn(dates);
     }
 
 

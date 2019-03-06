@@ -1,5 +1,6 @@
 package com.upgrade.islandreservationsapi.config;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.upgrade.islandreservationsapi.dto.ApiError;
 import com.upgrade.islandreservationsapi.dto.ApiFieldError;
 import com.upgrade.islandreservationsapi.exception.*;
@@ -28,6 +29,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,19 +73,10 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     }
 
     @ExceptionHandler(value
-            = { ReservationCancelledException.class})
-    protected ResponseEntity<Object> handleReservationCancelled(
-            ReservationCancelledException ex, WebRequest request) {
-        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
-        return handleExceptionInternal(ex, error,
-                new HttpHeaders(), error.getStatus(), request);
-    }
-
-    @ExceptionHandler(value
-            = { StatusChangeNotAllowedException.class})
-    protected ResponseEntity<Object> handleStatusChangeNotAllowed(
-            StatusChangeNotAllowedException ex, WebRequest request) {
-        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage());
+            = { InvalidReservationException.class})
+    protected ResponseEntity<Object> handleInvalidReservation(
+            InvalidReservationException ex, WebRequest request) {
+        ApiError error = new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), ex.getErrors());
         return handleExceptionInternal(ex, error,
                 new HttpHeaders(), error.getStatus(), request);
     }
@@ -138,8 +131,20 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
 
     @Override
     protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatus status, WebRequest request) {
+        StringBuilder message = new StringBuilder();
+        if(ex.getCause() instanceof InvalidFormatException) {
+            InvalidFormatException ife = (InvalidFormatException) ex.getCause();
+            message.append("Invalid format: ");
+            if(ife.getCause() instanceof DateTimeParseException) {
+                message.append("use format 'yyyy-MM-dd' for dates ");
+            } else {
+                message.append(ex.getCause().getLocalizedMessage());
+            }
+        } else {
+            message.append(ex.getLocalizedMessage());
+        }
         ApiError apiError =
-                new ApiError(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage());
+                new ApiError(HttpStatus.BAD_REQUEST, message.toString());
         return new ResponseEntity<>(
                 apiError, new HttpHeaders(), apiError.getStatus());
     }
@@ -177,7 +182,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         }
 
         if(ex.getRequiredType() != null && ex.getRequiredType().equals(LocalDate.class)) {
-            error.append(" must have format yyyy/MM/dd");
+            error.append(" must have format yyyy-MM-dd");
         } else if(ex.getRequiredType() != null) {
             error.append(" must be of type ")
                     .append(ex.getRequiredType().getName());

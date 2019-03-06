@@ -41,6 +41,8 @@ public class AvailabilityControllerTest {
 
     private static final int DEFAULT_MAX_AVAILABILITY = 100;
     private static final int DEFAULT_MAX_DATE_RANGE = 30;
+    private static final String DATE_FORMAT = "yyyy-MM-dd";
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern(DATE_FORMAT);
 
     @Before
     public void initialize() {
@@ -58,10 +60,9 @@ public class AvailabilityControllerTest {
 
         given(availabilityService.getAvailabilities(fromDate, toDate)).willReturn(availabilities);
 
-        String format = "yyyy/MM/dd";
         mvc.perform(get("/v1/availability")
-                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
-                .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
+                .param("fromDate", fromDate.format(DATE_FORMATTER))
+                .param("toDate", toDate.format(DATE_FORMATTER))
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("UTF-8"))
                 .andExpect(status().isOk())
@@ -77,10 +78,9 @@ public class AvailabilityControllerTest {
         given(availabilityService.getAvailabilities(fromDate, toDate))
                 .willThrow(new InvalidDatesException("toDate must be after fromDate."));
 
-        String format = "yyyy/MM/dd";
         mvc.perform(get("/v1/availability")
-                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
-                .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
+                .param("fromDate", fromDate.format(DATE_FORMATTER))
+                .param("toDate", toDate.format(DATE_FORMATTER))
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("UTF-8"))
                 .andExpect(status().isBadRequest())
@@ -93,14 +93,13 @@ public class AvailabilityControllerTest {
         LocalDate fromDate = LocalDate.now().plusDays(4);
         LocalDate toDate = LocalDate.now().plusDays(2);
 
-        String format = "yyyy-MM-dd";
         mvc.perform(get("/v1/availability")
-                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern(format)))
-                .param("toDate", toDate.format(DateTimeFormatter.ofPattern(format)))
+                .param("fromDate", fromDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")))
+                .param("toDate", toDate.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")))
                 .contentType(MediaType.APPLICATION_JSON)
                 .characterEncoding("UTF-8"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message", is("fromDate must have format yyyy/MM/dd")))
+                .andExpect(jsonPath("$.message", is("fromDate must have format yyyy-MM-dd")))
                 .andDo(print());
     }
 

@@ -97,7 +97,7 @@ public class ReservationControllerTest {
                     containsInAnyOrder("start", "start")))
             .andExpect(jsonPath("$.fieldErrors[*].message",
                     containsInAnyOrder("must be a future date",
-                            "reservations must be created at least 1 day(s) ahead of arrival.")));
+                            "start date must be at least 1 day(s) in the future.")));
     }
 
     @Test
@@ -150,7 +150,7 @@ public class ReservationControllerTest {
     @Test
     public void updateInvalidReservation() throws Exception {
         Reservation reservation = new Reservation("John", "Oliver", "johnoliver@gmail.com",
-                LocalDate.now(), LocalDate.now().plusDays(4), 3);
+                LocalDate.now().plusDays(1), LocalDate.now().plusDays(5), 3);
         reservation.setEmail("test@email.com");
         reservation.setId(101);
         ModelMapper modelMapper = new ModelMapper();
@@ -171,11 +171,9 @@ public class ReservationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message", is("Validation failed")))
                 .andExpect(jsonPath("$.fieldErrors[*].path",
-                        containsInAnyOrder("start", "start", "end")))
+                        containsInAnyOrder("end")))
                 .andExpect(jsonPath("$.fieldErrors[*].message",
-                        containsInAnyOrder("must be a future date",
-                                "max duration is 3 day(s).",
-                                "reservations must be created at least 1 day(s) ahead of arrival.")));
+                        containsInAnyOrder("max duration is 3 day(s).")));
     }
 
     @Test
