@@ -26,7 +26,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     @Override
     public int getMaxAvailability() {
-        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY);
+        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY);
         if(value.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
                     Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY.toString(), DEFAULT_MAX_AVAILABILITY);
@@ -39,7 +39,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
     @Override
     public int getMaxReservation() {
-        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_RESERVATION);
+        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_RESERVATION);
         if(value.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
                     Configuration.CONFIGURATION_NAMES.MAX_RESERVATION.toString(), DEFAULT_MAX_DURATION);
@@ -51,7 +51,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     public int getMinAheadDays() {
-        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MIN_AHEAD);
+        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MIN_AHEAD);
         if(value.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
                     Configuration.CONFIGURATION_NAMES.MIN_AHEAD.toString(), DEFAULT_MIN_AHEAD_DAYS);
@@ -63,7 +63,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     public int getMaxAheadDays() {
-        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AHEAD);
+        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AHEAD);
         if(value.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
                     Configuration.CONFIGURATION_NAMES.MAX_AHEAD.toString(), DEFAULT_MAX_AHEAD_DAYS);
@@ -75,7 +75,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     public int getMaxDateRange() {
-        Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE);
+        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE);
         if(value.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
                     Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE.toString(), DEFAULT_MAX_DATE_RANGE);
@@ -87,7 +87,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     }
 
     private Optional<Integer> getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES name) {
-        Optional<Configuration> maxValueOpt = repository.findById(name.toString());
+        final Optional<Configuration> maxValueOpt = repository.findById(name.toString());
         return maxValueOpt.map(c -> Integer.valueOf(c.getValue()));
     }
 }

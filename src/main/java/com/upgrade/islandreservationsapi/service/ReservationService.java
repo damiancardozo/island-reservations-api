@@ -35,7 +35,7 @@ public interface ReservationService {
      * of the reservation in the DB.
      */
     Reservation updateReservation(Reservation reservation)
-            throws NoAvailabilityForDateException, ReservationNotFoundException, ReservationCancelledException, StatusChangeNotAllowedException;
+            throws NoAvailabilityForDateException, ReservationNotFoundException, InvalidReservationException;
 
     /**
      * Sets the status of a reservation to CANCELLED

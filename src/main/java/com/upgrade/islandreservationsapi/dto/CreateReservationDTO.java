@@ -8,7 +8,6 @@ import javax.validation.constraints.*;
 import java.time.LocalDate;
 
 @ReservationDates(startDateField = "start", endDateField = "end")
-
 public class CreateReservationDTO {
 
     @NotBlank()
@@ -20,10 +19,10 @@ public class CreateReservationDTO {
     private String email;
     @NotNull
     @Future
-    @JsonFormat(pattern="yyyy/MM/dd")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate start;
     @NotNull
-    @JsonFormat(pattern="yyyy/MM/dd")
+    @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate end;
     @NotNull
     @Positive
@@ -79,4 +78,11 @@ public class CreateReservationDTO {
         this.numberOfPersons = numberOfPersons;
     }
 
+    public Reservation.Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Reservation.Status status) {
+        this.status = status;
+    }
 }

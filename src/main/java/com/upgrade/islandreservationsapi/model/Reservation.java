@@ -1,8 +1,6 @@
 package com.upgrade.islandreservationsapi.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.springframework.format.annotation.DateTimeFormat;
-
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
@@ -35,13 +33,10 @@ public class Reservation {
     private String email;
     @Column(name = "Start")
     @NotNull
-    @Future()
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
     private LocalDate start;
     @Column(name = "End")
     @NotNull
-    @Future(message = "Must be a future date")
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @Future
     private LocalDate end;
     @Column(name = "NumberOfPersons")
     @NotNull
@@ -50,6 +45,9 @@ public class Reservation {
     @Column(name = "Status")
     @Enumerated(EnumType.STRING)
     private Status status;
+    @Version
+    @Column(name = "Version")
+    private long version;
 
     public Reservation() {}
 
@@ -88,6 +86,7 @@ public class Reservation {
                 ", end=" + end +
                 ", numberOfPersons=" + numberOfPersons +
                 ", status=" + status +
+                ", version=" + version+
                 '}';
     }
 
@@ -153,5 +152,13 @@ public class Reservation {
 
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public long getVersion() {
+        return version;
+    }
+
+    public void setVersion(long version) {
+        this.version = version;
     }
 }

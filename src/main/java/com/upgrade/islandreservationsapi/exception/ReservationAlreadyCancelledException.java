@@ -1,6 +1,6 @@
 package com.upgrade.islandreservationsapi.exception;
 
-public class ReservationAlreadyCancelledException extends Exception {
+public class ReservationAlreadyCancelledException extends InvalidReservationException {
 
     public ReservationAlreadyCancelledException() {
         super("Reservation is already cancelled.");
