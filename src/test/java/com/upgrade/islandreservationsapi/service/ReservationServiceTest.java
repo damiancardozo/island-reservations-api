@@ -112,7 +112,7 @@ public class ReservationServiceTest {
 
         DayAvailability a1 = new DayAvailability(fromDate, 88, 100);
 
-        Mockito.when(reservationRepository.findById(101)).thenReturn(Optional.of(existingReservation));
+        Mockito.when(reservationRepository.findAndLockById(101)).thenReturn(Optional.of(existingReservation));
         Mockito.when(availabilityService.addAvailability(fromDate, toDate, -2)).thenReturn(List.of(a1));
         Mockito.when(reservationRepository.save(existingReservation)).thenReturn(newReservation);
 
@@ -141,7 +141,7 @@ public class ReservationServiceTest {
         DayAvailability a3 = new DayAvailability(toDate, 88, 100);
         List<DayAvailability> newAvailabilities = List.of(a1, a2, a3);
 
-        Mockito.when(reservationRepository.findById(101)).thenReturn(Optional.of(existingReservation));
+        Mockito.when(reservationRepository.findAndLockById(101)).thenReturn(Optional.of(existingReservation));
         Mockito.when(availabilityService.addAvailability(fromDate, toDate, 10)).thenReturn(List.of(a2));
         Mockito.when(availabilityService.updateDayAvailability(newReservation)).thenReturn(newAvailabilities);
         Mockito.when(reservationRepository.save(existingReservation)).thenReturn(newReservation);
@@ -165,7 +165,7 @@ public class ReservationServiceTest {
                 fromDate, toDate, 12);
         newReservation.setId(101);
 
-        Mockito.when(reservationRepository.findById(101)).thenReturn(Optional.of(existingReservation));
+        Mockito.when(reservationRepository.findAndLockById(101)).thenReturn(Optional.of(existingReservation));
         Mockito.when(reservationRepository.save(newReservation)).thenReturn(newReservation);
 
         Reservation result = reservationService.updateReservation(newReservation);
