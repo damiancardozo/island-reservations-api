@@ -73,6 +73,22 @@ public class DayAvailabilityServiceTest {
         availabilityService.getAvailabilities(fromDate, toDate);
     }
 
+    @Test(expected = InvalidDatesException.class)
+    public void testGetAvailabilityInvalidDates2() throws InvalidDatesException {
+        LocalDate fromDate = LocalDate.now().plusDays(1);
+        LocalDate toDate = LocalDate.now().plusDays(32);
+
+        availabilityService.getAvailabilities(fromDate, toDate);
+    }
+
+    @Test
+    public void testGetAvailabilityValidDates() throws InvalidDatesException {
+        LocalDate fromDate = LocalDate.now().plusDays(1);
+        LocalDate toDate = LocalDate.now().plusDays(31);
+
+        availabilityService.getAvailabilities(fromDate, toDate);
+    }
+
     @Test
     public void testGetAvailabilityNoRecords() throws InvalidDatesException {
         LocalDate fromDate = LocalDate.now().plusDays(1);

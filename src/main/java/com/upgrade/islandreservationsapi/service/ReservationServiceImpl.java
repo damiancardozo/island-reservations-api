@@ -53,7 +53,7 @@ public class ReservationServiceImpl implements ReservationService {
             throws NoAvailabilityForDateException, ReservationNotFoundException,
                 InvalidReservationException {
         logger.info("Updating reservation with id {}", reservation.getId());
-        final Optional<Reservation> oldReservationOpt = reservationRepository.findById(reservation.getId());
+        final Optional<Reservation> oldReservationOpt = reservationRepository.findAndLockById(reservation.getId());
         oldReservationOpt.ifPresentOrElse(r -> logger.info("Found existing reservation with id {}", r.getId()),
                 () -> logger.info("Reservation not found. Can't update."));
         Reservation oldReservation = oldReservationOpt

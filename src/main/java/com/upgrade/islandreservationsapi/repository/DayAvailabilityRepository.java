@@ -13,7 +13,7 @@ public interface DayAvailabilityRepository extends JpaRepository<DayAvailability
     List<DayAvailability> findByDateBetweenOrderByDateAsc(LocalDate from, LocalDate to);
 
     @Override
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Lock(LockModeType.PESSIMISTIC_READ)
     List<DayAvailability> findAllById(Iterable<LocalDate> iterable);
 
     void refresh(DayAvailability da);
