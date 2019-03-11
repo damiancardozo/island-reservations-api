@@ -44,6 +44,8 @@ INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('M
 
 INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('MAX_DATE_RANGE', 'Max number of days to query for availability', '90');
 
+INSERT INTO `Island`.`Configuration` (`Name`, `Description`, `Value`) VALUES ('DEFAULT_DATE_RANGE', 'Default number of days to query for availability', '30');
+
 
 -- view with dates used to lock before creating/updating DayAvailability records
 
