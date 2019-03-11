@@ -41,7 +41,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
-        logger.debug("createReservation(): updating uvalability...");
+        logger.debug("createReservation(): updating avalability...");
         availabilityService.updateDayAvailability(reservation);
         logger.info("Creating reservation {}", reservation.toString());
         return reservationRepository.save(reservation);
