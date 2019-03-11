@@ -49,12 +49,9 @@ public class DayAvailabilityServiceImpl implements DayAvailabilityService {
             throw new InvalidDatesException("toDate must be after fromDate.");
         }
         long maxDateRange = configurationService.getMaxDateRange();
-        if(maxDateRange % 30 == 0) {
-            // if max date range is 30, then treat it as a month. so update it based on this month's number of days
-            maxDateRange = ChronoUnit.DAYS.between(fromDate, LocalDate.now().plusMonths(1).plusDays(1));
-        }
-        if(ChronoUnit.DAYS.between(fromDate, toDate) >= maxDateRange) {
-            logger.info("getAvailabilities(): Invalid dates. Date range is too long.");
+        int range = (int) ChronoUnit.DAYS.between(fromDate, toDate.plusDays(1));
+        if(range > maxDateRange) {
+            logger.info("getAvailabilities(): Invalid dates. Date range {} is greater than the max {}", range, maxDateRange);
             throw new InvalidDatesException("Date range is too long. Please send a date range of " + maxDateRange + " days max.");
         }
         if(!fromDate.isAfter(LocalDate.now())) {

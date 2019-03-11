@@ -47,8 +47,8 @@ public class ReservationControllerIntegrationTest {
 
     @Autowired
     private DayAvailabilityRepository availabilityRepository;
-    private final Logger logger = LogManager.getLogger(ReservationControllerIntegrationTest.class);
 
+    private final Logger logger = LogManager.getLogger(ReservationControllerIntegrationTest.class);
 
     @Test
     public void testGetReservation() throws Exception {

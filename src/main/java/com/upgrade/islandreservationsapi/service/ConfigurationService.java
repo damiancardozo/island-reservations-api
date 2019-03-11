@@ -38,4 +38,12 @@ public interface ConfigurationService {
      * @return int with max date range for availability check
      */
     int getMaxDateRange();
+
+    /**
+     * Gets the default number of days to check for availability when no parameters are provided
+     * in the API call.
+     * If this configuration record does not exist, inserts a new one with a default value
+     * @return int with default date range for availability check
+     */
+    int getDefaultDateRange();
 }

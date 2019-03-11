@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -53,11 +52,15 @@ public class DayAvailabilityServiceTest {
 
     private static final int DEFAULT_MAX_AVAILABILITY = 100;
     private static final int DEFAULT_MAX_DATE_RANGE = 30;
+    private static final int DEFAULT_MIN_AHEAD_DAYS = 1;
+    private static final int DEFAULT_DEFAULT_DATE_RANGE = 30;
 
     @Before
     public void init() {
         Mockito.when(configurationService.getMaxAvailability()).thenReturn(DEFAULT_MAX_AVAILABILITY);
         Mockito.when(configurationService.getMaxDateRange()).thenReturn(DEFAULT_MAX_DATE_RANGE);
+        Mockito.when(configurationService.getMinAheadDays()).thenReturn(DEFAULT_MIN_AHEAD_DAYS);
+        Mockito.when(configurationService.getDefaultDateRange()).thenReturn(DEFAULT_DEFAULT_DATE_RANGE);
 
         List<Dates> dates = new ArrayList<>();
         LocalDate.now().datesUntil(LocalDate.now().plusDays(30)).forEach(d -> dates.add(new Dates(d)));
@@ -75,16 +78,16 @@ public class DayAvailabilityServiceTest {
 
     @Test(expected = InvalidDatesException.class)
     public void testGetAvailabilityInvalidDates2() throws InvalidDatesException {
-        LocalDate fromDate = LocalDate.now().plusDays(1);
-        LocalDate toDate = LocalDate.now().plusDays(32);
+        LocalDate fromDate = LocalDate.now().plusDays(DEFAULT_MIN_AHEAD_DAYS);
+        LocalDate toDate = fromDate.plusDays(DEFAULT_MAX_DATE_RANGE);
 
         availabilityService.getAvailabilities(fromDate, toDate);
     }
 
     @Test
     public void testGetAvailabilityValidDates() throws InvalidDatesException {
-        LocalDate fromDate = LocalDate.now().plusDays(1);
-        LocalDate toDate = LocalDate.now().plusDays(31);
+        LocalDate fromDate = LocalDate.now().plusDays(DEFAULT_MIN_AHEAD_DAYS);
+        LocalDate toDate = fromDate.plusDays(DEFAULT_MAX_DATE_RANGE - 1);
 
         availabilityService.getAvailabilities(fromDate, toDate);
     }

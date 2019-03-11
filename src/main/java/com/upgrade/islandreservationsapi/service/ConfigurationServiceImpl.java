@@ -7,6 +7,8 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 
 @Service
@@ -21,69 +23,56 @@ public class ConfigurationServiceImpl implements ConfigurationService {
     private static final int DEFAULT_MIN_AHEAD_DAYS = 1;
     private static final int DEFAULT_MAX_DURATION = 3;
     private static final int DEFAULT_MAX_AVAILABILITY = 100;
-    private static final int DEFAULT_MAX_DATE_RANGE = 30;
+    private static final int DEFAULT_MAX_DATE_RANGE = 90;
+    private static final int DEFAULT_DEFAULT_DATE_RANGE = 30;
     private static final String MISSING_RECORD_LOG_TEMPLATE = "Value for {} not found in database. Inserting row with default value {}";
 
     @Override
     public int getMaxAvailability() {
-        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY);
-        if(value.isEmpty()) {
-            logger.info(MISSING_RECORD_LOG_TEMPLATE,
-                    Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY.toString(), DEFAULT_MAX_AVAILABILITY);
-            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY.toString(),
-                    Integer.toString(DEFAULT_MAX_AVAILABILITY));
-            repository.save(conf);
-        }
-        return value.orElse(DEFAULT_MAX_AVAILABILITY);
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.MAX_AVAILABILITY, DEFAULT_MAX_AVAILABILITY, false);
     }
 
     @Override
     public int getMaxReservation() {
-        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_RESERVATION);
-        if(value.isEmpty()) {
-            logger.info(MISSING_RECORD_LOG_TEMPLATE,
-                    Configuration.CONFIGURATION_NAMES.MAX_RESERVATION.toString(), DEFAULT_MAX_DURATION);
-            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MAX_RESERVATION.toString(),
-                    Integer.toString(DEFAULT_MAX_DURATION));
-            repository.save(conf);
-        }
-        return value.orElse(DEFAULT_MAX_DURATION);
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.MAX_RESERVATION, DEFAULT_MAX_DURATION, true);
     }
 
+    @Override
     public int getMinAheadDays() {
-        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MIN_AHEAD);
-        if(value.isEmpty()) {
-            logger.info(MISSING_RECORD_LOG_TEMPLATE,
-                    Configuration.CONFIGURATION_NAMES.MIN_AHEAD.toString(), DEFAULT_MIN_AHEAD_DAYS);
-            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MIN_AHEAD.toString(),
-                    Integer.toString(DEFAULT_MIN_AHEAD_DAYS));
-            repository.save(conf);
-        }
-        return value.orElse(DEFAULT_MIN_AHEAD_DAYS);
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.MIN_AHEAD, DEFAULT_MIN_AHEAD_DAYS, true);
     }
 
+    @Override
     public int getMaxAheadDays() {
-        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_AHEAD);
-        if(value.isEmpty()) {
-            logger.info(MISSING_RECORD_LOG_TEMPLATE,
-                    Configuration.CONFIGURATION_NAMES.MAX_AHEAD.toString(), DEFAULT_MAX_AHEAD_DAYS);
-            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MAX_AHEAD.toString(),
-                    Integer.toString(DEFAULT_MAX_AHEAD_DAYS));
-            repository.save(conf);
-        }
-        return value.orElse(DEFAULT_MAX_AHEAD_DAYS);
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.MAX_AHEAD, DEFAULT_MAX_AHEAD_DAYS, true);
     }
 
+    @Override
     public int getMaxDateRange() {
-        final Optional<Integer> value = getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE);
-        if(value.isEmpty()) {
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE, DEFAULT_MAX_DATE_RANGE, true);
+    }
+
+    @Override
+    public int getDefaultDateRange() {
+        return getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES.DEFAULT_DATE_RANGE, DEFAULT_DEFAULT_DATE_RANGE, true);
+    }
+
+    private int getOrSaveIntegerConfiguration(Configuration.CONFIGURATION_NAMES name, Integer defaultValue, boolean updateDays) {
+        final Optional<Integer> valueOpt = getIntegerConfigurationByName(name);
+        if(valueOpt.isEmpty()) {
             logger.info(MISSING_RECORD_LOG_TEMPLATE,
-                    Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE.toString(), DEFAULT_MAX_DATE_RANGE);
-            Configuration conf = new Configuration(Configuration.CONFIGURATION_NAMES.MAX_DATE_RANGE.toString(),
-                    Integer.toString(DEFAULT_MAX_DATE_RANGE));
+                    name.toString(), defaultValue);
+            Configuration conf = new Configuration(name.toString(),
+                    Integer.toString(defaultValue));
             repository.save(conf);
         }
-        return value.orElse(DEFAULT_MAX_DATE_RANGE);
+        int value = valueOpt.orElse(defaultValue);
+        if(updateDays && value % 30 == 0) {
+            // if max date range is multiple of 30, then treat it as a month. so update it based on this month's number of days
+            value = (int) ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.now().plusMonths(value / 30));
+            logger.debug("updated value of property {} to {} based on the number of days in the month(s).", name.toString(), value);
+        }
+        return value;
     }
 
     private Optional<Integer> getIntegerConfigurationByName(Configuration.CONFIGURATION_NAMES name) {
