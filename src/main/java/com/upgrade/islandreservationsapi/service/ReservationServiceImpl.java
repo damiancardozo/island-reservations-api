@@ -1,8 +1,10 @@
 package com.upgrade.islandreservationsapi.service;
 
 import com.upgrade.islandreservationsapi.dto.ApiFieldError;
+import com.upgrade.islandreservationsapi.dto.Occupancy;
 import com.upgrade.islandreservationsapi.exception.*;
 import com.upgrade.islandreservationsapi.model.Reservation;
+import com.upgrade.islandreservationsapi.repository.DatesRepository;
 import com.upgrade.islandreservationsapi.repository.ReservationRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservationServiceImpl implements ReservationService {
@@ -25,7 +28,7 @@ public class ReservationServiceImpl implements ReservationService {
     private ConfigurationService configurationService;
 
     @Autowired
-    private DayAvailabilityService availabilityService;
+    private DatesRepository datesRepository;
 
     private final Logger logger = LogManager.getLogger(ReservationServiceImpl.class);
 
@@ -42,8 +45,16 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Reservation createReservation(Reservation reservation) throws NoAvailabilityForDateException {
         logger.debug("createReservation(): updating avalability...");
-        availabilityService.updateDayAvailability(reservation);
-        logger.info("Creating reservation {}", reservation.toString());
+        // lock dates
+        datesRepository.findAllById(reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList()));
+        final int maxAvailability = configurationService.getMaxAvailability();
+        List<Occupancy> occupancies = reservationRepository.calculateOccupancyByRange(reservation.getStart(), reservation.getEnd());
+        boolean noAvailability = occupancies.stream()
+                .anyMatch(o -> o.getValue() + reservation.getNumberOfPersons() > maxAvailability);
+        if(noAvailability) {
+            throw new NoAvailabilityForDateException();
+        }
+        reservation.addReservationDays();
         return reservationRepository.save(reservation);
     }
 
@@ -58,39 +69,50 @@ public class ReservationServiceImpl implements ReservationService {
                 () -> logger.info("Reservation not found. Can't update."));
         Reservation oldReservation = oldReservationOpt
                 .orElseThrow(ReservationNotFoundException::new);
+        reservation.setVersion(oldReservation.getVersion());
         // validation for update
         validateReservationUpdate(reservation, oldReservation);
 
-        final boolean datesChanged = !oldReservation.getStart().equals(reservation.getStart())
-                || !oldReservation.getEnd().equals(reservation.getEnd());
-        final boolean numberChanged = !oldReservation.getNumberOfPersons().equals(reservation.getNumberOfPersons());
+        final List<LocalDate> oldDates = oldReservation.getStart().datesUntil(oldReservation.getEnd()).collect(Collectors.toList());
+        final List<LocalDate> newDates = reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList());
+        boolean subset = oldDates.containsAll(newDates);
+        final boolean biggerNumber = oldReservation.getNumberOfPersons() < reservation.getNumberOfPersons();
 
-        oldReservation.setFistName(reservation.getFistName());
-        oldReservation.setLastName(reservation.getLastName());
-        oldReservation.setEmail(reservation.getEmail());
-
-        if(!datesChanged && !numberChanged) {
-            logger.info("udpateReservation(): Dates, number of persons and status did not change. " +
-                    "No need to update availability.");
-            return reservationRepository.save(oldReservation);
-        }
-
-        if(!datesChanged) {
-            logger.info("udpateReservation(): Dates did not change. Updating availability for dates.");
-            int difference = oldReservation.getNumberOfPersons() - reservation.getNumberOfPersons();
-            availabilityService.addAvailability(oldReservation.getStart(), oldReservation.getEnd(), difference);
+        if(!subset && !biggerNumber) {
+            logger.info("udpateReservation(): no chance that there's no availability. saving reservation..");
+            reservation.addReservationDays();
+            return reservationRepository.save(reservation);
         } else {
-            logger.info("udpateReservation(): Updating availability for old and new dates");
-            // increase availability for old reservation dates (like if reservation was cancelled) by the old number of persons
-            availabilityService.addAvailability(oldReservation.getStart(), oldReservation.getEnd(), oldReservation.getNumberOfPersons());
-            // decrease availability for new reservation dates by the new number of persons
-            availabilityService.updateDayAvailability(reservation);
+            datesRepository.findAllById(reservation.getStart().datesUntil(reservation.getEnd()).collect(Collectors.toList()));
+            int maxAvailability = configurationService.getMaxAvailability();
+            List<Occupancy> occupancies = reservationRepository.calculateOccupancyExcludeReservation(newDates, oldReservation.getId());
+            boolean noAvailability = occupancies.stream()
+                    .anyMatch(o -> o.getValue() + reservation.getNumberOfPersons() > maxAvailability);
+            if(noAvailability) {
+                throw new NoAvailabilityForDateException();
+            }
+            reservation.addReservationDays();
+            logger.debug("udpateReservation(): saving reservation...");
+            return reservationRepository.save(reservation);
         }
-        oldReservation.setStart(reservation.getStart());
-        oldReservation.setEnd(reservation.getEnd());
-        oldReservation.setNumberOfPersons(reservation.getNumberOfPersons());
-        logger.debug("udpateReservation(): saving reservation...");
-        return reservationRepository.save(oldReservation);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Reservation cancelReservation(Integer id)
+            throws ReservationNotFoundException, ReservationAlreadyCancelledException {
+        logger.info("Cancelling reservation id {}", id);
+        final Optional<Reservation> reservationOpt = reservationRepository.findById(id);
+        reservationOpt.ifPresentOrElse(r -> logger.info("Reservation id {} found", r.getId()),
+                () -> logger.info("Reservation not found. Can't cancel."));
+        final Reservation reservation = reservationOpt.orElseThrow(ReservationNotFoundException::new);
+        if(reservation.getStatus() == Reservation.Status.CANCELLED) {
+            logger.info("Reservation id {} is already cancelled.", id);
+            throw new ReservationAlreadyCancelledException(id);
+        }
+        reservation.setStatus(Reservation.Status.CANCELLED);
+        reservation.getReservationDays().clear();
+        return reservationRepository.save(reservation);
     }
 
     private void validateReservationUpdate(Reservation reservation, Reservation existingReservation)
@@ -133,28 +155,6 @@ public class ReservationServiceImpl implements ReservationService {
                                 String.format("start date must be at least %d day(s) in the future.", minAheadDays))));
             }
         }
-    }
-
-    @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Reservation cancelReservation(Integer id)
-            throws ReservationNotFoundException, ReservationAlreadyCancelledException {
-        logger.info("Cancelling reservation id {}", id);
-        final Optional<Reservation> reservationOpt = reservationRepository.findById(id);
-        reservationOpt.ifPresentOrElse(r -> logger.info("Reservation id {} found", r.getId()),
-                () -> logger.info("Reservation not found. Can't cancel."));
-        final Reservation reservation = reservationOpt.orElseThrow(ReservationNotFoundException::new);
-        if(reservation.getStatus() == Reservation.Status.CANCELLED) {
-            logger.info("Reservation id {} is already cancelled.", id);
-            throw new ReservationAlreadyCancelledException(id);
-        }
-        reservation.setStatus(Reservation.Status.CANCELLED);
-
-        // update availability
-        logger.info("Updating availability after cancellation");
-        availabilityService.addAvailability(reservation.getStart(), reservation.getEnd(), reservation.getNumberOfPersons());
-
-        return reservationRepository.save(reservation);
     }
 
 }

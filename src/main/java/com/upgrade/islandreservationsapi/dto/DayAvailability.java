@@ -4,11 +4,18 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
-public class DayAvailabilityDTO {
+public class DayAvailability {
 
     @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate date;
     private int availability;
+
+    public DayAvailability() {}
+
+    public DayAvailability(LocalDate date, int availability) {
+        this.date = date;
+        this.availability = availability;
+    }
 
     public LocalDate getDate() {
         return date;

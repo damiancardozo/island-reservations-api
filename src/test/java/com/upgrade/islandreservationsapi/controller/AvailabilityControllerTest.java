@@ -1,7 +1,7 @@
 package com.upgrade.islandreservationsapi.controller;
 
+import com.upgrade.islandreservationsapi.dto.DayAvailability;
 import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
-import com.upgrade.islandreservationsapi.model.DayAvailability;
 import com.upgrade.islandreservationsapi.service.ConfigurationService;
 import com.upgrade.islandreservationsapi.service.DayAvailabilityService;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class AvailabilityControllerTest {
         LocalDate toDate = LocalDate.now().plusDays(10);
         List<DayAvailability> availabilities = new ArrayList<>();
         for(int i = 1; i <= 10; i++) {
-            availabilities.add(new DayAvailability(LocalDate.now().plusDays(i), DEFAULT_MAX_AVAILABILITY, DEFAULT_MAX_AVAILABILITY));
+            availabilities.add(new DayAvailability(LocalDate.now().plusDays(i), DEFAULT_MAX_AVAILABILITY));
         }
 
         given(availabilityService.getAvailabilities(fromDate, toDate)).willReturn(availabilities);

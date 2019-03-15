@@ -14,7 +14,7 @@ public class ApplicationStartup implements ApplicationListener<ApplicationReadyE
     @Autowired
     private ConfigurationService configurationService;
 
-    private Logger logger = LogManager.getLogger(ApplicationStartup.class);
+    private final Logger logger = LogManager.getLogger(ApplicationStartup.class);
 
     @Override
     public void onApplicationEvent(ApplicationReadyEvent applicationReadyEvent) {

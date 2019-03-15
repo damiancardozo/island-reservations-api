@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -45,6 +47,8 @@ public class Reservation {
     @Column(name = "Status")
     @Enumerated(EnumType.STRING)
     private Status status;
+    @OneToMany(mappedBy = "id.reservation", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    private List<ReservationDay> reservationDays = new ArrayList<>();
     @Version
     @Column(name = "Version")
     private long version;
@@ -88,6 +92,26 @@ public class Reservation {
                 ", status=" + status +
                 ", version=" + version+
                 '}';
+    }
+
+    public void addReservationDays() {
+        start.datesUntil(end)
+                .forEach(d -> addReservationDay(
+                        new ReservationDay(
+                                new ReservationDayIdentity(d, this),
+                                numberOfPersons)));
+    }
+
+    public void addReservationDay(ReservationDay rd) {
+        reservationDays.add(rd);
+    }
+
+    public void removeReservationDay(ReservationDay rd) {
+        reservationDays.remove(rd);
+    }
+
+    public void removeReservationDay(LocalDate date) {
+        reservationDays.removeIf(rd -> rd.getId().getDate().equals(date));
     }
 
     public Integer getId() {
@@ -160,5 +184,13 @@ public class Reservation {
 
     public void setVersion(long version) {
         this.version = version;
+    }
+
+    public List<ReservationDay> getReservationDays() {
+        return reservationDays;
+    }
+
+    public void setReservationDays(List<ReservationDay> reservationDays) {
+        this.reservationDays = reservationDays;
     }
 }

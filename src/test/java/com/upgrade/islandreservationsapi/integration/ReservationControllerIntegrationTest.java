@@ -4,9 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.upgrade.islandreservationsapi.dto.ReservationCreated;
 import com.upgrade.islandreservationsapi.dto.ReservationDTO;
-import com.upgrade.islandreservationsapi.model.DayAvailability;
+import com.upgrade.islandreservationsapi.helper.ResponseCollector;
 import com.upgrade.islandreservationsapi.model.Reservation;
-import com.upgrade.islandreservationsapi.repository.DayAvailabilityRepository;
 import com.upgrade.islandreservationsapi.repository.ReservationRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,10 +15,13 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 import java.time.LocalDate;
 import java.util.LinkedList;
 import java.util.List;
@@ -44,9 +46,6 @@ public class ReservationControllerIntegrationTest {
 
     @Autowired
     private ReservationRepository reservationRepository;
-
-    @Autowired
-    private DayAvailabilityRepository availabilityRepository;
 
     private final Logger logger = LogManager.getLogger(ReservationControllerIntegrationTest.class);
 
@@ -104,7 +103,8 @@ public class ReservationControllerIntegrationTest {
                 });
 
         Optional<Reservation> created = reservationRepository.findById(rc.getId());
-        assertFalse(created.isEmpty());
+        assertTrue(created.isPresent());
+        assertEquals(2, created.get().getReservationDays().size());
     }
 
     @Test
@@ -184,8 +184,6 @@ public class ReservationControllerIntegrationTest {
         }, 5);
 
         logger.info(reservationRepository.findAll().toString());
-        logger.info(availabilityRepository.findAll().toString());
-
         assertEquals(4, reservationRepository.count());
 
     }
@@ -220,6 +218,77 @@ public class ReservationControllerIntegrationTest {
         Optional<Reservation> reservationInDb = reservationRepository.findById(reservation.getId());
         assertTrue(reservationInDb.isPresent());
         assertEquals(LocalDate.now().plusDays(2), reservationInDb.get().getEnd());
+    }
+
+    @Test
+    public void testUpdateReservation() throws Exception {
+        Reservation reservation = new Reservation("John", "Doe", "jdoe@hotmail.com",
+                LocalDate.now().plusDays(2), LocalDate.now().plusDays(4), 15);
+        reservation.addReservationDays();
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        ModelMapper modelMapper = new ModelMapper();
+        ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule timeModule = new JavaTimeModule();
+        mapper.registerModule(timeModule);
+
+        dto.setStart(LocalDate.now().plusDays(3));
+        dto.setEnd(LocalDate.now().plusDays(5));
+        dto.setNumberOfPersons(20);
+        String jsonBody = mapper.writeValueAsString(dto);
+
+        mvc.perform(put("/v1/reservations/" + reservation.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(jsonBody))
+                .andDo(print())
+                .andExpect(status().isOk());
+
+        Optional<Reservation> reservationInDbOpt = reservationRepository.findById(reservation.getId());
+        assertTrue(reservationInDbOpt.isPresent());
+        Reservation reservationInDb = reservationInDbOpt.get();
+        assertEquals(LocalDate.now().plusDays(3), reservationInDb.getStart());
+        assertEquals(LocalDate.now().plusDays(5), reservationInDb.getEnd());
+        assertEquals(2, reservationInDb.getReservationDays().size());
+        assertTrue(reservationInDb.getReservationDays().stream().anyMatch(rd -> rd.getId().getDate().equals(LocalDate.now().plusDays(3))));
+        assertTrue(reservationInDb.getReservationDays().stream().anyMatch(rd -> rd.getId().getDate().equals(LocalDate.now().plusDays(4))));
+    }
+
+    @Test
+    public void testUpdateNoAvailability() throws Exception {
+        Reservation reservation = new Reservation("John", "Doe", "jdoe@hotmail.com",
+                LocalDate.now().plusDays(2), LocalDate.now().plusDays(4), 15);
+        reservation.addReservationDays();
+        reservation = reservationRepository.saveAndFlush(reservation);
+
+        Reservation reservation2 = new Reservation("Luke", "Warm", "luke@gmail.com",
+                LocalDate.now().plusDays(5), LocalDate.now().plusDays(8), 40);
+        reservation2.addReservationDays();
+        reservationRepository.saveAndFlush(reservation2);
+
+        Reservation reservation3 = new Reservation("Luke", "Warm", "luke@gmail.com",
+                LocalDate.now().plusDays(7), LocalDate.now().plusDays(9), 35);
+        reservation3.addReservationDays();
+        reservationRepository.saveAndFlush(reservation3);
+
+        ModelMapper modelMapper = new ModelMapper();
+        ReservationDTO dto = modelMapper.map(reservation, ReservationDTO.class);
+        ObjectMapper mapper = new ObjectMapper();
+        JavaTimeModule timeModule = new JavaTimeModule();
+        mapper.registerModule(timeModule);
+
+        dto.setStart(LocalDate.now().plusDays(7));
+        dto.setEnd(LocalDate.now().plusDays(10));
+        dto.setNumberOfPersons(40);
+        String jsonBody = mapper.writeValueAsString(dto);
+
+        mvc.perform(put("/v1/reservations/" + reservation.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .characterEncoding("UTF-8")
+                .content(jsonBody))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -301,8 +370,6 @@ public class ReservationControllerIntegrationTest {
         }, 5);
 
         logger.info(reservationRepository.findAll().toString());
-        logger.info(availabilityRepository.findAll().toString());
-
         assertEquals(4, reservationRepository.count());
 
     }
@@ -319,26 +386,56 @@ public class ReservationControllerIntegrationTest {
         mapper.registerModule(timeModule);
         String jsonBody = mapper.writeValueAsString(dto);
 
-        runMultithreaded(() -> {
+        dto.setNumberOfPersons(25);
+        String jsonBody2 = mapper.writeValueAsString(dto);
+
+        ResponseCollector collector = new ResponseCollector();
+
+        Runnable r1 = () -> {
             try {
-                mvc.perform(put("/v1/reservations/1")
+                MvcResult result = mvc.perform(put("/v1/reservations/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8")
-                        .content(jsonBody));
+                        .content(jsonBody))
+                        .andReturn();
+                collector.addResponseBody(result.getResponse().getContentAsString());
+                collector.addResponseStatus(result.getResponse().getStatus());
             } catch (Exception e) {
                 System.out.println("exception in put " + e);
             }
-        }, 5);
+        };
+        Runnable r2 = () -> {
+            try {
+                MvcResult result = mvc.perform(put("/v1/reservations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .content(jsonBody2))
+                        .andReturn();
+                collector.addResponseBody(result.getResponse().getContentAsString());
+                collector.addResponseStatus(result.getResponse().getStatus());
+            } catch (Exception e) {
+                System.out.println("exception in put " + e);
+            }
+        };
+
+        Thread t1 = new Thread(r1);
+        Thread t2 = new Thread(r2);
+        Thread t3 = new Thread(r1);
+        Thread t4 = new Thread(r2);
+        List<Thread> threadList = List.of(t1, t2, t3, t4);
+
+        for( Thread t :  threadList) {
+            t.start();
+        }
+
+        for( Thread t :  threadList) {
+            t.join();
+        }
 
         logger.info(reservationRepository.findAll().toString());
-        logger.info(availabilityRepository.findAll().toString());
 
-        Optional<DayAvailability> availabilityOpt1 = availabilityRepository.findById(LocalDate.now().plusDays(1));
-        assertTrue(availabilityOpt1.isPresent());
-        assertEquals(85, availabilityOpt1.get().getAvailability());
-        Optional<DayAvailability> availabilityOpt2 = availabilityRepository.findById(LocalDate.now().plusDays(2));
-        assertTrue(availabilityOpt2.isPresent());
-        assertEquals(85, availabilityOpt2.get().getAvailability());
+        assertEquals(1, collector.countStatusByCode(HttpStatus.OK));
+        assertEquals(3, collector.countStatusByCode(HttpStatus.CONFLICT));
     }
 
     @Test
@@ -353,29 +450,57 @@ public class ReservationControllerIntegrationTest {
         mapper.registerModule(timeModule);
         String jsonBody = mapper.writeValueAsString(dto);
 
-        runMultithreaded(() -> {
+        dto.setNumberOfPersons(20);
+        String jsonBody2 = mapper.writeValueAsString(dto);
+
+        ResponseCollector collector = new ResponseCollector();
+
+        Runnable r1 = () -> {
             try {
-                mvc.perform(put("/v1/reservations/1")
+                MvcResult result = mvc.perform(put("/v1/reservations/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .characterEncoding("UTF-8")
-                        .content(jsonBody));
+                        .content(jsonBody))
+                        .andReturn();
+                collector.addResponseBody(result.getResponse().getContentAsString());
+                collector.addResponseStatus(result.getResponse().getStatus());
             } catch (Exception e) {
                 System.out.println("exception in put " + e);
             }
-        }, 5);
+        };
+        Runnable r2 = () -> {
+            try {
+                MvcResult result = mvc.perform(put("/v1/reservations/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("UTF-8")
+                        .content(jsonBody2))
+                        .andReturn();
+                collector.addResponseBody(result.getResponse().getContentAsString());
+                collector.addResponseStatus(result.getResponse().getStatus());
+            } catch (Exception e) {
+                System.out.println("exception in put " + e);
+            }
+        };
+
+        Thread t1 = new Thread(r1);
+        Thread t2 = new Thread(r2);
+        Thread t3 = new Thread(r1);
+        Thread t4 = new Thread(r2);
+        List<Thread> threadList = List.of(t1, t2, t3, t4);
+
+        for( Thread t :  threadList) {
+            t.start();
+        }
+
+        for( Thread t :  threadList) {
+            t.join();
+        }
 
         logger.info(reservationRepository.findAll().toString());
-        logger.info(availabilityRepository.findAll().toString());
 
-        Optional<DayAvailability> availabilityOpt1 = availabilityRepository.findById(LocalDate.now().plusDays(1));
-        assertTrue(availabilityOpt1.isPresent());
-        assertEquals(100, availabilityOpt1.get().getAvailability());
-        Optional<DayAvailability> availabilityOpt2 = availabilityRepository.findById(LocalDate.now().plusDays(2));
-        assertTrue(availabilityOpt2.isPresent());
-        assertEquals(85, availabilityOpt2.get().getAvailability());
-        Optional<DayAvailability> availabilityOpt3 = availabilityRepository.findById(LocalDate.now().plusDays(3));
-        assertTrue(availabilityOpt3.isPresent());
-        assertEquals(85, availabilityOpt3.get().getAvailability());
+        assertEquals(1, collector.countStatusByCode(HttpStatus.OK));
+        assertEquals(3, collector.countStatusByCode(HttpStatus.CONFLICT));
+
     }
 
     public static void runMultithreaded(Runnable  runnable, int threadCount) throws InterruptedException {
