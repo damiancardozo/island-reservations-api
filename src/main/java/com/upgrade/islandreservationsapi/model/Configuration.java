@@ -9,13 +9,13 @@ public class Configuration {
 
     public enum CONFIGURATION_NAMES {MAX_AVAILABILITY, MAX_RESERVATION, MIN_AHEAD, MAX_AHEAD, MAX_DATE_RANGE, DEFAULT_DATE_RANGE}
 
-    @Column(name = "Name")
+    @Column(name = "Name", length = 50)
     @NotNull
     @Id
     private String name;
     @Column(name = "Description")
     private String description;
-    @Column(name = "Value")
+    @Column(name = "Value", length = 50)
     @NotNull
     private String value;
 

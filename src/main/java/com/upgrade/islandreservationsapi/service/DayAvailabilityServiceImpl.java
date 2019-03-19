@@ -3,7 +3,6 @@ package com.upgrade.islandreservationsapi.service;
 import com.upgrade.islandreservationsapi.dto.DayAvailability;
 import com.upgrade.islandreservationsapi.dto.Occupancy;
 import com.upgrade.islandreservationsapi.exception.InvalidDatesException;
-import com.upgrade.islandreservationsapi.repository.DatesRepository;
 import com.upgrade.islandreservationsapi.repository.ReservationRepository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,9 +17,6 @@ import java.util.List;
 
 @Service
 public class DayAvailabilityServiceImpl implements DayAvailabilityService {
-
-    @Autowired
-    private DatesRepository datesRepository;
 
     @Autowired
     private ReservationRepository reservationRepository;
